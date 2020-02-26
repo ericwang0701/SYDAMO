@@ -20,7 +20,8 @@ os.environ['PYOPENGL_PLATFORM'] = 'egl'
 import cv2
 import time
 import torch
-import joblib
+# import joblib
+import pickle
 import shutil
 import colorsys
 import argparse
@@ -249,85 +250,91 @@ def main(args):
 
     print(f'Saving output results to \"{os.path.join(output_path, "vibe_output.pkl")}\".')
 
-    joblib.dump(vibe_results, os.path.join(output_path, "vibe_output.pkl"))
+    # joblib.dump(vibe_results, os.path.join(output_path, "vibe_output.pkl"))
 
-    # if not args.no_render:
-    #     # ========= Render results as a single video ========= #
-    #     renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True, wireframe=args.wireframe)
+    for person in vibe_results.keys():
+        dump_path = os.path.join(output_path, "vibe_output_%s.pkl" % person)
+        os.makedirs(os.path.dirname(dump_path), exist_ok=True)
+        pickle.dump(vibe_results[person], open(dump_path, 'wb'))
 
-    #     output_img_folder = f'{image_folder}_output'
-    #     os.makedirs(output_img_folder, exist_ok=True)
 
-    #     print(f'Rendering output video, writing frames to {output_img_folder}')
+    if not args.no_render:
+        # ========= Render results as a single video ========= #
+        renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True, wireframe=args.wireframe)
 
-    #     # prepare results for rendering
-    #     frame_results = prepare_rendering_results(vibe_results, num_frames)
-    #     mesh_color = {k: colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0) for k in vibe_results.keys()}
+        output_img_folder = f'{image_folder}_output'
+        os.makedirs(output_img_folder, exist_ok=True)
 
-    #     image_file_names = sorted([
-    #         os.path.join(image_folder, x)
-    #         for x in os.listdir(image_folder)
-    #         if x.endswith('.png') or x.endswith('.jpg')
-    #     ])
+        print(f'Rendering output video, writing frames to {output_img_folder}')
 
-    #     for frame_idx in tqdm(range(len(image_file_names))):
-    #         img_fname = image_file_names[frame_idx]
-    #         img = cv2.imread(img_fname)
+        # prepare results for rendering
+        frame_results = prepare_rendering_results(vibe_results, num_frames)
+        mesh_color = {k: colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0) for k in vibe_results.keys()}
 
-    #         if args.sideview:
-    #             side_img = np.zeros_like(img)
+        image_file_names = sorted([
+            os.path.join(image_folder, x)
+            for x in os.listdir(image_folder)
+            if x.endswith('.png') or x.endswith('.jpg')
+        ])
 
-    #         for person_id, person_data in frame_results[frame_idx].items():
-    #             frame_verts = person_data['verts']
-    #             frame_cam = person_data['cam']
+        for frame_idx in tqdm(range(len(image_file_names))):
+            img_fname = image_file_names[frame_idx]
+            img = cv2.imread(img_fname)
 
-    #             mc = mesh_color[person_id]
+            if args.sideview:
+                side_img = np.zeros_like(img)
 
-    #             mesh_filename = None
+            for person_id, person_data in frame_results[frame_idx].items():
+                frame_verts = person_data['verts']
+                frame_cam = person_data['cam']
 
-    #             if args.save_obj:
-    #                 mesh_folder = os.path.join(output_path, 'meshes', f'{person_id:04d}')
-    #                 os.makedirs(mesh_folder, exist_ok=True)
-    #                 mesh_filename = os.path.join(mesh_folder, f'{frame_idx:06d}.obj')
+                mc = mesh_color[person_id]
 
-    #             img = renderer.render(
-    #                 img,
-    #                 frame_verts,
-    #                 cam=frame_cam,
-    #                 color=mc,
-    #                 mesh_filename=mesh_filename,
-    #             )
+                mesh_filename = None
 
-    #             if args.sideview:
-    #                 side_img = renderer.render(
-    #                     side_img,
-    #                     frame_verts,
-    #                     cam=frame_cam,
-    #                     color=mc,
-    #                     angle=270,
-    #                     axis=[0,1,0],
-    #                 )
+                if args.save_obj:
+                    mesh_folder = os.path.join(output_path, 'meshes', f'{person_id:04d}')
+                    os.makedirs(mesh_folder, exist_ok=True)
+                    mesh_filename = os.path.join(mesh_folder, f'{frame_idx:06d}.obj')
 
-    #         if args.sideview:
-    #             img = np.concatenate([img, side_img], axis=1)
+                img = renderer.render(
+                    img,
+                    frame_verts,
+                    cam=frame_cam,
+                    color=mc,
+                    mesh_filename=mesh_filename,
+                )
 
-    #         cv2.imwrite(os.path.join(output_img_folder, f'{frame_idx:06d}.png'), img)
+                if args.sideview:
+                    side_img = renderer.render(
+                        side_img,
+                        frame_verts,
+                        cam=frame_cam,
+                        color=mc,
+                        angle=270,
+                        axis=[0,1,0],
+                    )
 
-    #         if args.display:
-    #             cv2.imshow('Video', img)
-    #             if cv2.waitKey(1) & 0xFF == ord('q'):
-    #                 break
+            if args.sideview:
+                img = np.concatenate([img, side_img], axis=1)
 
-    #     if args.display:
-    #         cv2.destroyAllWindows()
+            cv2.imwrite(os.path.join(output_img_folder, f'{frame_idx:06d}.png'), img)
 
-    #     # ========= Save rendered video ========= #
-    #     vid_name = os.path.basename(video_file)
-    #     save_name = f'{vid_name.replace(".mp4", "")}_vibe_result.mp4'
-    #     save_name = os.path.join(output_path, save_name)
-    #     print(f'Saving result video to {save_name}')
-    #     images_to_video(img_folder=output_img_folder, output_vid_file=save_name)
-    #     shutil.rmtree(output_img_folder)
+            if args.display:
+                cv2.imshow('Video', img)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+        if args.display:
+            cv2.destroyAllWindows()
+
+        # ========= Save rendered video ========= #
+        vid_name = os.path.basename(video_file)
+        save_name = f'{vid_name.replace(".mp4", "")}_vibe_result.mp4'
+        save_name = os.path.join(output_path, save_name)
+        print(f'Saving result video to {save_name}')
+        images_to_video(img_folder=output_img_folder, output_vid_file=save_name)
+        shutil.rmtree(output_img_folder)
 
     shutil.rmtree(image_folder)
     print('================= END =================')
