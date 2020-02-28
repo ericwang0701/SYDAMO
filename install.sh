@@ -15,5 +15,5 @@ echo "Installing pip dependencies"
 $PWD/vibe-env/bin/pip install numpy torch torchvision gdown
 $PWD/vibe-env/bin/pip install -r requirements.txt
 
-sh prepare_data.sh
+$PWD/prepare_data.sh
 
