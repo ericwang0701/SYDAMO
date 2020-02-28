@@ -25,6 +25,7 @@ import pickle
 import shutil
 import colorsys
 import argparse
+import glob
 import numpy as np
 from tqdm import tqdm
 from multi_person_tracker import MPT
@@ -48,7 +49,7 @@ from lib.utils.demo_utils import (
 MIN_NUM_FRAMES = 25
 
 def main(args):
-    for video_file in args.videos.split(','):
+    for video_file in glob.glob(os.path.join(args.videos, '*')):
         if not os.path.isfile(video_file):
             print(f'Skipping video \"{video_file}\": does not exist!')
         else:
