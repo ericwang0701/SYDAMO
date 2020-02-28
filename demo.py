@@ -37,7 +37,6 @@ from lib.data_utils.kp_utils import convert_kps
 from lib.utils.pose_tracker import run_posetracker
 
 from lib.utils.demo_utils import (
-    download_youtube_clip,
     smplify_runner,
     convert_crop_cam_to_orig_img,
     prepare_rendering_results,
@@ -49,22 +48,14 @@ from lib.utils.demo_utils import (
 MIN_NUM_FRAMES = 25
 
 def main(args):
+    for video_file in args.videos.split(','):
+        if not os.path.isfile(video_file):
+            print(f'Skipping video \"{video_file}\": does not exist!')
+        else:
+            run_vibe(video_file, args)
+
+def run_vibe(video_file, args):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-    video_file = args.vid_file
-
-    # ========= [Optional] download the youtube video ========= #
-    if video_file.startswith('https://www.youtube.com'):
-        print(f'Donwloading YouTube video \"{video_file}\"')
-        video_file = download_youtube_clip(video_file, '/tmp')
-
-        if video_file is None:
-            exit('Youtube url is not valid!')
-
-        print(f'YouTube Video has been downloaded to {video_file}...')
-
-    if not os.path.isfile(video_file):
-        exit(f'Input video \"{video_file}\" does not exist!')
 
     output_path = os.path.join(args.output_folder, os.path.basename(video_file).replace('.mp4', ''))
     os.makedirs(output_path, exist_ok=True)
@@ -343,8 +334,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--vid_file', type=str,
-                        help='input video path or youtube link')
+    parser.add_argument('--videos', type=str,
+                        help='input videos directory path')
 
     parser.add_argument('--output_folder', type=str,
                         help='output folder to write results')
