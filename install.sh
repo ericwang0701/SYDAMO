@@ -2,7 +2,7 @@
 original_directory=$PWD
 script_directory=$(dirname -- "$0")
 
-cd script_directory
+cd $script_directory
 
 if [ ! -d "./vibe-env" ]
 then
