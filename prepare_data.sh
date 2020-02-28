@@ -10,5 +10,5 @@ if [ ! -d ./data ]; then
   cd ..
   mv data/vibe_data/sample_video.mp4 .
 else
-  echo "/data directory exists, assuming it's up-to-date"
+  echo "./data directory exists, assuming it's up-to-date"
 fi
