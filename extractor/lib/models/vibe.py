@@ -19,8 +19,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from lib.models.spin import Regressor, hmr
-from lib.models.attention import SelfAttention
+from .spin import Regressor, hmr
+from .attention import SelfAttention
 
 
 class TemporalEncoder(nn.Module):

@@ -11,7 +11,7 @@ from smplx.lbs import vertices2joints
 from smplx.body_models import ModelOutput
 import torchvision.models.resnet as resnet
 
-from lib.utils.geometry import rotation_matrix_to_angle_axis
+from ..utils.geometry import rotation_matrix_to_angle_axis
 
 # Map joints to SMPL joints
 JOINT_MAP = {
@@ -332,7 +332,7 @@ class Regressor(nn.Module):
             self.register_buffer('init_shape', init_shape)
             self.register_buffer('init_cam', init_cam)
         else:
-            from lib.models.hmr import load_mean_dict
+            from .lib.models.hmr import load_mean_dict
             mean_params = load_mean_dict()
             init_pose = torch.from_numpy(mean_params['pose'][:].astype('float32'))
             init_shape = torch.from_numpy(mean_params['shape'][:].astype('float32'))

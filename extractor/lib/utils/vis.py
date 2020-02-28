@@ -24,10 +24,10 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 
-from lib.data_utils.img_utils import torch2numpy, torch_vid2numpy
-from lib.data_utils.img_utils import normalize_2d_kp
-from lib.models.spin import SMPL, SMPL_MODEL_DIR, get_smpl_faces
-from lib.data_utils import kp_utils
+from ..data_utils.img_utils import torch2numpy, torch_vid2numpy
+from ..data_utils.img_utils import normalize_2d_kp
+from ..models.spin import SMPL, SMPL_MODEL_DIR, get_smpl_faces
+from ..data_utils import kp_utils
 
 
 class WeakPerspectiveCamera(pyrender.Camera):
@@ -438,7 +438,7 @@ def batch_draw_skeleton(images, target, max_images=8, dataset='common'):
 
 
 def get_regressor_output(features):
-    from lib.models.hmr import Regressor
+    from .lib.models.hmr import Regressor
     from ..smpl.smpl_layer import SMPL_Layer
 
     batch_size, seqlen = features.shape[:2]

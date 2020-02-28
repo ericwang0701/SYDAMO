@@ -8,7 +8,7 @@ if [ ! -d ./data ]; then
   unzip vibe_data.zip
   rm vibe_data.zip
   cd ..
-  mv data/vibe_data/sample_video.mp4 .
+  rm data/vibe_data/sample_video.mp4
 else
   echo "./data directory exists, assuming it's up-to-date"
 fi

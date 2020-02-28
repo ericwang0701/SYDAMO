@@ -10,6 +10,7 @@ pyrender
 progress
 filterpy
 matplotlib
+torch
 torchvision
 scikit-image
 scikit-video
