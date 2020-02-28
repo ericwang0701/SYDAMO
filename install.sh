@@ -32,4 +32,4 @@ echo "Installing pip dependencies"
 
 ./prepare_data.sh
 
-cd original_directory
+cd $original_directory
