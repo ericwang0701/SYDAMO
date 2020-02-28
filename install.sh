@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ -d "./vibe-env" ] then
+if [ ! -d "./vibe-env" ] then
   echo "Creating virtual environment"
   python -m venv vibe-env
 fi
