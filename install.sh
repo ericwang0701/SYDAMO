@@ -3,13 +3,14 @@ original_directory=$PWD
 script_directory=$(dirname -- "$0")
 
 cd script_directory
+
 if [ ! -d "./vibe-env" ]
 then
   echo "Creating virtual environment"
-  if [ "$(python3 -V)" == "Python 3*" ]
+  if [[ "$(python3 -V)" =~ "Python 3" ]]
   then
     python3 -m venv vibe-env
-  elif [ "$(python -V)" == "Python 3*" ]
+  elif [[ "$(python -V)" =~ "Python 3" ]]
   then
     python -m venv vibe-env
   else
