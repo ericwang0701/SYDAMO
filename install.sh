@@ -26,6 +26,7 @@ echo "Installing system dependencies"
 apt-get install unzip ffmpeg
 
 echo "Installing pip dependencies"
+# TODO: gdown does not always install correctly, why??
 ./vibe-env/bin/pip install numpy torch torchvision gdown
 ./vibe-env/bin/pip install -r requirements.txt
 
