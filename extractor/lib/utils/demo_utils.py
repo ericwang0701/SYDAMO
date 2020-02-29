@@ -210,7 +210,7 @@ def download_url(url, outdir):
     subprocess.call(cmd)
 
 
-def download_ckpt(outdir='data/vibe_data', use_3dpw=False):
+def download_ckpt(outdir='data/vibe_data', use_3dpw=True):
     os.makedirs(outdir, exist_ok=True)
 
     if use_3dpw:
@@ -219,7 +219,7 @@ def download_ckpt(outdir='data/vibe_data', use_3dpw=False):
         if not os.path.isfile(ckpt_file):
             download_url(url=url, outdir=outdir)
     else:
-        ckpt_file = 'data/vibe_data/vibe_model_wo_3dpw.pth.tar'
+        ckpt_file = 'extractor/data/vibe_data/vibe_model_wo_3dpw.pth.tar'
         url = 'https://www.dropbox.com/s/amj2p8bmf6g56k6/vibe_model_wo_3dpw.pth.tar'
         if not os.path.isfile(ckpt_file):
             download_url(url=url, outdir=outdir)

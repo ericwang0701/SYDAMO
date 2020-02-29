@@ -1,7 +1,7 @@
 Requirements:
  - unzip
  - ffmpeg
- - gdown
+ - gdown (for prepare_data.sh)
 
 1. Make a virtualenv
 2. Install gdown from pip
