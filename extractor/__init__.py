@@ -29,7 +29,6 @@ import colorsys
 import argparse
 import glob
 import numpy as np
-from tqdm import tqdm
 from multi_person_tracker import MPT
 from torch.utils.data import DataLoader
 import logging
@@ -131,7 +130,7 @@ class Extractor():
             if tracking_results[person_id]['frames'].shape[0] < MIN_NUM_FRAMES:
                 del tracking_results[person_id]
 
-        logging.info(f'Found {str(len(tracking_results.keys()))} persons')
+        logging.info(f'Found bounding box(es) around {str(len(tracking_results.keys()))} person(s)')
 
         # ========= Define VIBE model ========= #
         model = VIBE_Demo(
@@ -155,7 +154,7 @@ class Extractor():
         # print(f'Running VIBE on each tracklet...')
         vibe_time = time.time()
         vibe_results = {}
-        for person_id in tqdm(list(tracking_results.keys())):
+        for person_id in list(tracking_results.keys()):
             bboxes = joints2d = None
 
             if self.tracking_method == 'bbox':
@@ -311,7 +310,7 @@ class Extractor():
                 if x.endswith('.png') or x.endswith('.jpg')
             ])
 
-            for frame_idx in tqdm(range(len(image_file_names))):
+            for frame_idx in range(len(image_file_names)):
                 img_fname = image_file_names[frame_idx]
                 img = cv2.imread(img_fname)
 
