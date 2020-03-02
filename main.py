@@ -5,11 +5,13 @@ from synthesiser import Synthesiser
 
 def main(args):
   extractor = Extractor(video_folder=args.video_folder,
-                        output_folder=args.output_folder,
+                        output_folder=args.extractor_results_folder,
                         render=args.render_extractor_results)
   extractor.run()
 
-  synthesiser = Synthesiser(blender=args.blender)
+  synthesiser = Synthesiser(blender=args.blender,
+                            motion_path=args.extractor_results_folder,
+                            target_size=args.target_size)
   synthesiser.run()
 
 if __name__ == '__main__':
@@ -20,10 +22,10 @@ if __name__ == '__main__':
                         help='input videos directory path',
                         required=True)
 
-    parser.add_argument('--output_folder',
+    parser.add_argument('--extractor_results_folder',
                         type=str,
                         default='data/motion',
-                        help='output folder to write results')
+                        help='Folder to save extractor results')
 
     parser.add_argument('--render_extractor_results',
                         action='store_true',
@@ -33,6 +35,11 @@ if __name__ == '__main__':
                         type=str,
                         default='./blender/blender',
                         help='Path to Blender executable')
+
+    parser.add_argument('--target_size',
+                        type=int,
+                        default=100,
+                        help='Target size of the synthetic dataset (number of videos)')
 
     args = parser.parse_args()
 
