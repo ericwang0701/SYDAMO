@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--output_folder',
                         type=str,
-                        default='output/',
+                        default='data/motion',
                         help='output folder to write results')
 
     args = parser.parse_args()
