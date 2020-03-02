@@ -5,14 +5,13 @@ from extractor import Extractor
 from synthesiser import Synthesiser
 
 def main(args):
+  if not args.skip_extractor:
+    extractor = Extractor(video_folder=args.video_folder,
+                          output_folder=args.extractor_results_folder,
+                          render=args.render_extractor_results)
+    extractor.run()
 
-  # Extract motion from video
-  extractor = Extractor(video_folder=args.video_folder,
-                        output_folder=args.extractor_results_folder,
-                        render=args.render_extractor_results)
-  extractor.run()
 
-  # Synthesise new videos using extracted motion
   synthesiser = Synthesiser(blender=args.blender,
                             motion_path=args.extractor_results_folder,
                             target_size=args.target_size,
@@ -26,8 +25,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--video_folder',
                         type=str,
-                        help='input videos directory path',
-                        required=True)
+                        help='input videos directory path')
 
     parser.add_argument('--extractor_results_folder',
                         type=str,
@@ -39,9 +37,8 @@ if __name__ == '__main__':
                         help='Render the results of the motion extractor into videos')
 
     parser.add_argument('--skip_extractor',
-                        type=int,
-                        default=200,
-                        help='Maximum number of frames for each synthetic video')
+                        action='store_true',
+                        help='SKip the motion extraction phase')
 
     parser.add_argument('--blender',
                         type=str,
@@ -59,5 +56,8 @@ if __name__ == '__main__':
                         help='Maximum number of frames for each synthetic video')
 
     args = parser.parse_args()
+
+    if not args.skip_extractor and not args.video_folder:
+      raise Exception('--video_folder is required for the extractor.')
 
     main(args)
