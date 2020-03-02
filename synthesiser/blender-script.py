@@ -241,9 +241,8 @@ class Renderer():
         with open(SHAPE_PATH, 'rb') as file:
             self.shapes = pickle.load(file)
 
-    def run(self, motion_folder):
+    def run(self):
         """Collect motions, generate samples and synthesise videos"""
-        self.motion_folder = motion_folder
         # Collect motion data from disk
         self.motion_data = self._collect_motion_data()
         # Generate samples by combining motion data
@@ -385,7 +384,7 @@ class Renderer():
         """Get all motion data from disk."""
         motions = []
         # List all pickle files in the directory
-        pattern = os.path.join(self.motion_folder, '**/*.pkl')
+        pattern = os.path.join(MOTION_PATH, '**/*.pkl')
         file_paths = glob(pattern)
         names = list(map(lambda f: f.split(
             '/')[-1].replace('.pkl', ''), file_paths))
