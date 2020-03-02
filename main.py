@@ -61,22 +61,22 @@ if __name__ == '__main__':
                         help='Target size of the synthetic dataset (number of videos)')
 
     parser.add_argument('--output',
-                         type=str,
-                         default='dataset',
-                         help='Name of the output archive')
+                        type=str,
+                        default='dataset',
+                        help='Name of the output archive')
 
-     parser.add_argument('--num_frames',
-                          type=int,
-                          default=200,
-                          help='Maximum number of frames for each synthetic video')
+    parser.add_argument('--num_frames',
+                        type=int,
+                        default=200,
+                        help='Maximum number of frames for each synthetic video')
 
-      # parser.add_argument('--archive',
-      #                     action='store_true',
-      #                     help='Create an archive with the whole synthetic dataset')
+    # parser.add_argument('--archive',
+    #                     action='store_true',
+    #                     help='Create an archive with the whole synthetic dataset')
 
-      args = parser.parse_args()
+    args = parser.parse_args()
 
-       if not args.skip_extractor and not args.video_folder:
-            raise Exception('--video_folder is required for the extractor.')
+    if not args.skip_extractor and not args.video_folder:
+        raise Exception('--video_folder is required for the extractor.')
 
-        main(args)
+    main(args)
