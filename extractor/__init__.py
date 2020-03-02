@@ -65,6 +65,8 @@ class Extractor():
         vibe_batch_size=450,
         render=False
     ):
+        logging.info('==================== EXTRACTOR ====================')
+
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
         log_format = '[extractor] %(message)s'

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import logging
 
 dirname = os.path.dirname(__file__)
 source = os.path.join(dirname, 'script-src.py')
@@ -7,6 +8,9 @@ compiled = os.path.join(dirname, 'script.py')
 
 class Synthesiser():
   def __init__(self, blender, motion_path, target_size, num_frames):
+    logging.basicConfig(level='INFO', format='%(message)s')
+    logging.info('=================== SYNTHESISER ===================')
+
     self.blender = blender
 
     self.configuration = dict({
