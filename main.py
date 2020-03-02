@@ -1,14 +1,17 @@
 import argparse
+import logging
 
 from extractor import Extractor
 from synthesiser import Synthesiser
 
 def main(args):
+  # Extract motion from video
   extractor = Extractor(video_folder=args.video_folder,
                         output_folder=args.extractor_results_folder,
                         render=args.render_extractor_results)
   extractor.run()
 
+  # Synthesise new videos using extracted motion
   synthesiser = Synthesiser(blender=args.blender,
                             motion_path=args.extractor_results_folder,
                             target_size=args.target_size,
