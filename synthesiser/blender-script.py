@@ -241,6 +241,9 @@ class Renderer():
         with open(SHAPE_PATH, 'rb') as file:
             self.shapes = pickle.load(file)
 
+        if not os.path.exists(TMP_PATH):
+            os.makedirs(TMP_PATH)
+
     def run(self):
         """Collect motions, generate samples and synthesise videos"""
         # Collect motion data from disk
@@ -599,6 +602,7 @@ class Renderer():
 
     def _clean(self):
         """Clean the directory holding temporary files."""
+
         for filename in os.listdir(TMP_PATH):
             file_path = os.path.join(TMP_PATH, filename)
             try:
