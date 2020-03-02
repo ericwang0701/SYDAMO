@@ -239,6 +239,7 @@ class Renderer():
 
         # Load CEASAR shape data
         with open(SHAPE_PATH, 'rb') as file:
+            logging.log('Loaded SMPL shape data from CEASAR')
             self.shapes = pickle.load(file)
 
         if not os.path.exists(TMP_PATH):
