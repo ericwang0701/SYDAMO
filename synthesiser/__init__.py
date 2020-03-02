@@ -6,19 +6,20 @@ source = os.path.join(dirname, 'script-src.py')
 compiled = os.path.join(dirname, 'script.py')
 
 class Synthesiser():
-  def __init__(self, blender, motion_path, target_size):
+  def __init__(self, blender, motion_path, target_size, num_frames):
     self.blender = blender
 
     self.configuration = dict({
       'MOTION_PATH': motion_path,
-      'TARGET_SIZE': target_size
+      'TARGET_SIZE': target_size,
+      'MAX_FRAMES': num_frames
     })
 
   def run(self):
     # Compile configuration settings into a single script file
     self._compile()
     # Run Blender with the script
-    subprocess.call(f'{self.blender} -t 1 -P {compiled} -b -noaudio | grep \'^\[synth_motion\]\'', shell=True)
+    subprocess.call(f'{self.blender} -t 1 -P {compiled} -b -noaudio | grep \'^\[synthesiser\]\'', shell=True)
 
   def _compile(self):
     script_source = open(source, 'r').read()

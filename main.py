@@ -11,7 +11,8 @@ def main(args):
 
   synthesiser = Synthesiser(blender=args.blender,
                             motion_path=args.extractor_results_folder,
-                            target_size=args.target_size)
+                            target_size=args.target_size,
+                            num_frames=args.num_frames)
   synthesiser.run()
 
 if __name__ == '__main__':
@@ -40,6 +41,11 @@ if __name__ == '__main__':
                         type=int,
                         default=100,
                         help='Target size of the synthetic dataset (number of videos)')
+
+    parser.add_argument('--num_frames',
+                        type=int,
+                        default=200,
+                        help='Maximum number of frames for each synthetic video')
 
     args = parser.parse_args()
 

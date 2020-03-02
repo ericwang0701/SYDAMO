@@ -45,7 +45,7 @@ MIN_Z = -50
 RENDER_WIDTH = 640
 RENDER_HEIGHT = 360
 FRAMES_PER_SECOND = 25
-MAX_FRAMES = 200
+# MAX_FRAMES = 200
 
 # Target size of the output dataset
 # TARGET_SIZE = 10
@@ -235,7 +235,7 @@ class Renderer():
 
     def __init__(self):
         # Set up logging format
-        log_format = '[synth_motion] %(message)s'
+        log_format = '[synthesiser] %(message)s'
         logging.basicConfig(level='INFO', format=log_format)
 
         # Load CEASAR shape data
@@ -253,6 +253,8 @@ class Renderer():
         # Generate samples by combining motion data
         self.samples = self._generate_samples(self.motion_data)
 
+        logging.info(f'Generated {str(len(self.samples.keys()))} scenes from extracted motion data')
+
         # Loop over all samples and create videos
         for sample_id, motion_list in self.samples.items():
             self._synthesise(sample_id, motion_list)
@@ -263,6 +265,9 @@ class Renderer():
 
     def _synthesise(self, sample_id, motion_list):
         """Synthesise a given sample using Blender"""
+
+        logging.info(f'Synthesising scene {str(sample_id)}')
+
         self._reset_blender()
 
         # Determine the number of frames for this sample based on the motion data in it
@@ -277,7 +282,7 @@ class Renderer():
         self._init_scene(nr_frames, motion_list)
 
         # Set motion and position keyframes to create the animation
-        self._animate(nr_frames, motion_list)
+        self._animate(sample_id, nr_frames, motion_list)
 
         # Render this sample
         self._render(sample_id, nr_frames)
@@ -337,6 +342,7 @@ class Renderer():
                                       (0.0, 0.0, 0.0, 1.0)))
 
         bpy.context.scene.render.engine = 'CYCLES'
+        bpy.context.scene.render.device = 'GPU'
         bpy.context.scene.render.fps = FRAMES_PER_SECOND
         bpy.context.scene.cycles.shading_system = True
         bpy.context.scene.use_nodes = True
@@ -428,8 +434,11 @@ class Renderer():
                 n: motion_data[n] for n in motion_names}
         return samples
 
-    def _animate(self, nr_frames, motion_list):
+    def _animate(self, sample_id, nr_frames, motion_list):
         """Store animation for the given motions in Blender and the given number of frames."""
+
+        logging.info(f'Animating scene {str(sample_id)} objects')
+
         for frame in range(nr_frames):
             # Set the frame pointer
             bpy.context.scene.frame_set(frame)
@@ -580,21 +589,28 @@ class Renderer():
 
     def _render(self, sample_id, nr_frames):
         """Render the given sample into a video."""
+
         self._render_images(sample_id, nr_frames)
+
         self._combine_images_as_video(sample_id)
 
     def _render_images(self, sample_id, nr_frames):
         """Loop over the frames and render each one to an image."""
+
+        logging.info(f'Rendering scene {str(sample_id)} frames')
+
         # iterate over the keyframes and render
         for frame in range(min(nr_frames, MAX_FRAMES)):
             bpy.context.scene.frame_set(frame)
             filepath = join(TMP_PATH, '%04d.png' % frame)
             bpy.context.scene.render.filepath = filepath
-
             bpy.ops.render.render(write_still=True)
 
     def _combine_images_as_video(self, sample_id):
         """Use ffmpeg to create a video from the already rendered image frames."""
+
+        logging.info(f'Combining scene {str(sample_id)} frames into video')
+
         render_filename = str(sample_id) + '.mp4'
         # Combine the frames into a video using ffmpeg
         cmd_ffmpeg = 'ffmpeg -y -r %s -i %s -c:v h264 -pix_fmt yuv420p -crf 23 %s' % (
