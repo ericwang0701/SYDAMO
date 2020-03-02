@@ -284,6 +284,7 @@ class Renderer():
         """Reset the Blender scene"""
         # Set render system settings
         bpy.context.scene.render.engine = 'CYCLES'
+        bpy.context.scene.cycles.device = 'GPU'
 
         # Delete the default blender cube if it is in the scene
         bpy.ops.object.select_all(action='DESELECT')
