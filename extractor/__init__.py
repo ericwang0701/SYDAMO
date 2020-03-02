@@ -89,7 +89,7 @@ class Extractor():
 
         logging.info(f'Found {str(len(video_files))} video files')
 
-        for video_file in tqdm(video_files):
+        for video_file in video_files:
             if not os.path.isfile(video_file):
                 print(f'Skipping video \"{video_file}\": does not exist!')
             else:

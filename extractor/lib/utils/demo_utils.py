@@ -191,10 +191,10 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
                '-f', 'image2',
                '-v', 'error',
                f'{img_folder}/%06d.png']
-    print(f'Running \"{" ".join(command)}\"')
-    subprocess.call(command)
 
-    print(f'Images saved to \"{img_folder}\"')
+    subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
+
+    # print(f'Images saved to \"{img_folder}\"')
 
     img_shape = cv2.imread(osp.join(img_folder, '000001.png')).shape
 
@@ -205,7 +205,7 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
 
 
 def download_url(url, outdir):
-    print(f'Downloading files from {url}')
+    # print(f'Downloading files from {url}')
     cmd = ['wget', '-c', url, '-P', outdir]
     subprocess.call(cmd)
 
