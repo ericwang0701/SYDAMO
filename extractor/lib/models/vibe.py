@@ -165,7 +165,7 @@ class VIBE(nn.Module):
                 del pretrained_dict['fc1.bias']
 
             self.regressor.load_state_dict(pretrained_dict, strict=False)
-            print(f'=> loaded pretrained model from \'{pretrained}\'')
+            # print(f'=> loaded pretrained model from \'{pretrained}\'')
 
 
     def forward(self, input, J_regressor=None):
@@ -250,7 +250,7 @@ class VIBE_Demo(nn.Module):
                 del pretrained_dict['fc1.bias']
 
             self.regressor.load_state_dict(pretrained_dict, strict=False)
-            print(f'=> loaded pretrained model from \'{pretrained}\'')
+            # print(f'=> loaded pretrained model from \'{pretrained}\'')
 
 
     def forward(self, input, J_regressor=None):
