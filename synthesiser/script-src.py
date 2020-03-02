@@ -17,6 +17,7 @@ from pickle import load
 from random import choice
 
 import numpy as np
+import subprocess
 
 import bmesh
 import bpy
@@ -27,7 +28,7 @@ from mathutils.bvhtree import BVHTree
 # Data path locations
 BG_PATH = 'data/backgrounds/'
 TEXTURES_PATH = 'data/textures/'
-MOTION_PATH = 'data/motion/'
+# MOTION_PATH = 'data/motion/'
 SMPL_PATH = 'data/smpl/'
 TMP_PATH = 'tmp/'
 SHAPE_PATH = 'data/shape/shape_data.pkl'
@@ -47,7 +48,7 @@ FRAMES_PER_SECOND = 25
 MAX_FRAMES = 200
 
 # Target size of the output dataset
-TARGET_SIZE = 10
+# TARGET_SIZE = 10
 
 SMPL_BONE_NAMES = ['Pelvis', 'L_Hip', 'R_Hip', 'Spine1', 'L_Knee', 'R_Knee', 'Spine2', 'L_Ankle', 'R_Ankle', 'Spine3', 'L_Foot', 'R_Foot',
                    'Neck', 'L_Collar', 'R_Collar', 'Head', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist', 'R_Wrist', 'L_Hand', 'R_Hand']
@@ -599,7 +600,8 @@ class Renderer():
         cmd_ffmpeg = 'ffmpeg -y -r %s -i %s -c:v h264 -pix_fmt yuv420p -crf 23 %s' % (
             FRAMES_PER_SECOND, join(TMP_PATH, '%04d.png'), join(OUTPUT_PATH, render_filename))
 
-        os.system(cmd_ffmpeg)
+        # os.system(cmd_ffmpeg)
+        subprocess.call(cmd_ffmpeg, shell=True, stdout=subprocess.DEVNULL)
 
     def _clean(self):
         """Clean the directory holding temporary files."""
