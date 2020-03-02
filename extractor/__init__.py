@@ -69,9 +69,6 @@ class Extractor():
 
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-        log_format = '[extractor] %(message)s'
-        logging.basicConfig(level='INFO', format=log_format)
-
         self.video_folder = video_folder
         self.output_folder = output_folder
         self.tracker_batch_size = tracker_batch_size
@@ -92,7 +89,7 @@ class Extractor():
 
         for video_file in video_files:
             if not os.path.isfile(video_file):
-                print(f'Skipping video \"{video_file}\": does not exist!')
+                logging.error(f'Skipping video \"{video_file}\": does not exist!')
             else:
                 self.run_vibe(video_file)
 
