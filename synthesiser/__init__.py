@@ -1,7 +1,9 @@
 import os
 import subprocess
 
-DIR = os.path.dirname(__file__)
+dirname = os.path.dirname(__file__)
+source = os.path.join(dirname, 'script-src.py')
+compiled = os.path.join(dirname, 'script.py')
 
 class Synthesiser():
   def __init__(self, blender, motion_path, target_size):
@@ -16,13 +18,12 @@ class Synthesiser():
     # Compile configuration settings into a single script file
     self._compile()
     # Run Blender with the script
-    subprocess.call(f'{self.blender} -t 1 -P script.py -b -noaudio | grep \'^\[synth_motion\]\'', shell=True)
+    subprocess.call(f'{self.blender} -t 1 -P {compiled} -b -noaudio | grep \'^\[synth_motion\]\'', shell=True)
 
   def _compile(self):
-    script_source = open(os.path.join(DIR, 'script-src.py'), 'r').read()
-    script_configured = os.path.join(DIR, 'script.py')
-
-    with open(script_configured, 'w') as file:
+    script_source = open(source, 'r').read()
+    
+    with open(compiled, 'w') as file:
       for variable, value in self.configuration.items():
         if type(value) is str:
           file.write(f'{variable} = \'{value}\'\n')
@@ -30,4 +31,3 @@ class Synthesiser():
           file.write(f'{variable} = {value}\n')
       
       file.write(script_source)
-
