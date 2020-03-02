@@ -204,7 +204,6 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
 
 
 def download_url(url, outdir):
-    # print(f'Downloading files from {url}')
     cmd = ['wget', '-c', url, '-P', outdir]
     subprocess.call(cmd)
 

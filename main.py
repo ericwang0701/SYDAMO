@@ -5,6 +5,7 @@ from extractor import Extractor
 from synthesiser import Synthesiser
 
 def main(args):
+
   # Extract motion from video
   extractor = Extractor(video_folder=args.video_folder,
                         output_folder=args.extractor_results_folder,
@@ -19,6 +20,8 @@ def main(args):
   synthesiser.run()
 
 if __name__ == '__main__':
+    logging.basicConfig(level='INFO')
+  
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--video_folder',
