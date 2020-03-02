@@ -176,7 +176,7 @@ def trim_videos(filename, start_time, end_time, output_filename):
                '-threads', '1',
                '-loglevel', 'panic',
                '"%s"' % output_filename]
-    subprocess.call(command).wait()
+    subprocess.call(command)
 
 
 def video_to_images(vid_file, img_folder=None, return_info=False):
@@ -191,7 +191,7 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
                '-v', 'error',
                f'{img_folder}/%06d.png']
 
-    subprocess.call(command, stdout=subprocess.DEVNULL).wait()
+    subprocess.call(command, stdout=subprocess.DEVNULL)
 
     # print(f'Images saved to \"{img_folder}\"')
 
@@ -206,7 +206,7 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
 def download_url(url, outdir):
     # print(f'Downloading files from {url}')
     cmd = ['wget', '-c', url, '-P', outdir]
-    subprocess.call(cmd).wait()
+    subprocess.call(cmd)
 
 
 def download_ckpt(outdir='data/vibe_data', use_3dpw=True):
@@ -234,7 +234,7 @@ def images_to_video(img_folder, output_vid_file):
         '-level', '3.0', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', '-v', 'error', output_vid_file,
     ]
 
-    subprocess.call(command, stdout=subprocess.DEVNULL).wait()
+    subprocess.call(command, stdout=subprocess.DEVNULL)
 
 
 def convert_crop_cam_to_orig_img(cam, bbox, img_width, img_height):

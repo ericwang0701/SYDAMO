@@ -44,7 +44,7 @@ def run_openpose(
     ]
 
     print('Executing', ' '.join(cmd))
-    subprocess.call(cmd).wait()
+    subprocess.call(cmd)
     os.chdir(pwd)
 
 
