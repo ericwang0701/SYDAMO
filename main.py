@@ -1,13 +1,14 @@
 import argparse
 
 from extractor import Extractor
-from constructor import Constructor
+from synthesiser import Synthesiser
 
 def main(args):
   extractor = Extractor(video_folder=args.video_folder, output_folder=args.output_folder)
   extractor.run()
 
-  constructor = Constructor()
+  synthesiser = Synthesiser()
+  synthesiser.run()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
