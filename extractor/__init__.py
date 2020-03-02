@@ -129,9 +129,9 @@ class Extractor():
             if tracking_results[person_id]['frames'].shape[0] < MIN_NUM_FRAMES:
                 del tracking_results[person_id]
 
-        num_frames = [str(person['frames'].shape[0]) for person in tracking_results.values()]
+        mpt_num_frames = [str(person['frames'].shape[0]) for person in tracking_results.values()]
 
-        logging.info(f'Found {str(len(tracking_results.keys()))} person(s), num. frames = {" ,".join(num_frames)}')
+        logging.info(f'Found {str(len(tracking_results.keys()))} person(s), num. frames = {" ,".join(mpt_num_frames)}')
 
         # ========= Define VIBE model ========= #
         model = VIBE_Demo(
@@ -153,7 +153,7 @@ class Extractor():
 
         # ========= Run VIBE on each person ========= #
         # print(f'Running VIBE on each tracklet...')
-        vibe_time = time.time()
+        # vibe_time = time.time()
         vibe_results = {}
         for person_id in list(tracking_results.keys()):
             bboxes = joints2d = None
@@ -274,11 +274,11 @@ class Extractor():
 
         del model
 
-        end = time.time()
-        fps = num_frames / (end - vibe_time)
+        # end = time.time()
+        # fps = num_frames / (end - vibe_time)
 
         # print(f'VIBE FPS: {fps:.2f}')
-        total_time = time.time() - total_time
+        # total_time = time.time() - total_time
         # print(f'Total time spent: {total_time:.2f} seconds (including model loading time).')
         # print(f'Total FPS (including model loading time): {num_frames / total_time:.2f}.')
 
