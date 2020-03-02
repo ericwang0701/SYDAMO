@@ -16,7 +16,6 @@ scikit-image
 scikit-video
 pillow==6.2.1
 opencv-python
-stickyt
 gdown
 git+https://github.com/mattloper/chumpy.git
 git+https://github.com/mkocabas/yolov3-pytorch.git
