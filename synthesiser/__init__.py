@@ -11,7 +11,7 @@ class Synthesiser():
     logging.basicConfig(level='INFO', format='%(message)s')
     logging.info('=================== SYNTHESISER ===================')
 
-    self.blender = blender
+    self.blender = os.path.join(os.getcwd(), blender)
 
     self.configuration = dict({
       'MOTION_PATH': motion_path,
@@ -36,3 +36,5 @@ class Synthesiser():
           file.write(f'{variable} = {value}\n')
       
       file.write(script_source)
+    
+    assert(os.path.exists(compiled))

@@ -20,7 +20,7 @@ def main(args):
   synthesiser.run()
 
 if __name__ == '__main__':
-    logging.basicConfig(level='INFO')
+    logging.basicConfig(level='INFO',format='%(message)s')
   
     parser = argparse.ArgumentParser()
 
@@ -38,9 +38,14 @@ if __name__ == '__main__':
                         action='store_true',
                         help='Render the results of the motion extractor into videos')
 
+    parser.add_argument('--skip_extractor',
+                        type=int,
+                        default=200,
+                        help='Maximum number of frames for each synthetic video')
+
     parser.add_argument('--blender',
                         type=str,
-                        default='./blender/blender',
+                        default='blender/blender',
                         help='Path to Blender executable')
 
     parser.add_argument('--target_size',
