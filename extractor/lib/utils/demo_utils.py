@@ -192,7 +192,7 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
                '-v', 'error',
                f'{img_folder}/%06d.png']
 
-    subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
+    subprocess.call(command, stdout=subprocess.DEVNULL)
 
     # print(f'Images saved to \"{img_folder}\"')
 
@@ -235,7 +235,7 @@ def images_to_video(img_folder, output_vid_file):
         '-level', '3.0', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', '-v', 'error', output_vid_file,
     ]
 
-    subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
+    subprocess.call(command, stdout=subprocess.DEVNULL)
 
 
 def convert_crop_cam_to_orig_img(cam, bbox, img_width, img_height):
