@@ -75,6 +75,7 @@ class Extractor():
         self.yolo_img_size = yolo_img_size
         self.run_smplify = run_smplify
         self.staf_dir = staf_dir
+        self.vibe_batch_size = vibe_batch_size
         self.no_render = no_render
 
         self.display = False # TODO: experiment with this

@@ -8,7 +8,6 @@ def main(args):
   extractor.run()
 
   constructor = Constructor()
-  print("Done")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
