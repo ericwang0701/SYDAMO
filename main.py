@@ -1,5 +1,7 @@
 import argparse
 import logging
+import tarfile
+import os
 
 from extractor import Extractor
 from synthesiser import Synthesiser
@@ -17,6 +19,12 @@ def main(args):
                             target_size=args.target_size,
                             num_frames=args.num_frames)
   synthesiser.run()
+
+  make_tarfile(args.output, 'output')
+
+def make_tarfile(archive_name, video_folder):
+  with tarfile.open(f'{archive_name}.tar.gz', 'w:gz') as tar:
+    tar.add(video_folder, arcname=os.path.basename(video_folder))
 
 if __name__ == '__main__':
     logging.basicConfig(level='INFO',format='%(message)s')
@@ -50,10 +58,19 @@ if __name__ == '__main__':
                         default=100,
                         help='Target size of the synthetic dataset (number of videos)')
 
+    parser.add_argument('--output',
+                        type=str,
+                        default='dataset',
+                        help='Name of the output archive')
+
     parser.add_argument('--num_frames',
                         type=int,
                         default=200,
                         help='Maximum number of frames for each synthetic video')
+
+    # parser.add_argument('--archive',
+    #                     action='store_true',
+    #                     help='Create an archive with the whole synthetic dataset')
 
     args = parser.parse_args()
 
