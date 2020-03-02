@@ -63,7 +63,7 @@ class Extractor():
         run_smplify=False,
         staf_dir='',
         vibe_batch_size=450,
-        no_render=False
+        render=False
     ):
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -76,7 +76,7 @@ class Extractor():
         self.run_smplify = run_smplify
         self.staf_dir = staf_dir
         self.vibe_batch_size = vibe_batch_size
-        self.no_render = no_render
+        self.render = render
 
         self.display = False # TODO: experiment with this
 
@@ -282,7 +282,7 @@ class Extractor():
             pickle.dump(vibe_results[person], open(dump_path, 'wb'))
 
 
-        if not self.no_render:
+        if self.render:
             # ========= Render results as a single video ========= #
             renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True)
 
