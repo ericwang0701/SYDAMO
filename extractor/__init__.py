@@ -129,7 +129,7 @@ class Extractor():
             if tracking_results[person_id]['frames'].shape[0] < MIN_NUM_FRAMES:
                 del tracking_results[person_id]
 
-        num_frames = [person['frames'].shape[0] for person in tracking_results.values()]
+        num_frames = [str(person['frames'].shape[0]) for person in tracking_results.values()]
 
         logging.info(f'Found {str(len(tracking_results.keys()))} person(s), num. frames = {" ,".join(num_frames)}')
 
