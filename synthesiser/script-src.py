@@ -246,6 +246,9 @@ class Renderer():
         if not os.path.exists(TMP_PATH):
             os.makedirs(TMP_PATH)
 
+        if not os.path.exists(OUTPUT_PATH):
+            os.makedirs(OUTPUT_PATH)
+
     def run(self):
         """Collect motions, generate samples and synthesise videos"""
         # Collect motion data from disk
@@ -318,6 +321,8 @@ class Renderer():
         self.shader_coeffs[0] = .5 + .6 * \
             statistics.mean(self.background_img.pixels) + .15 * np.random.rand()
         self.shader_coeffs[1] = -.7 * np.random.rand()
+
+        logging.info(f'Loading motion data into scene')
 
         # Load motion data into Blender
         for key in list(motion_list.keys()):
@@ -597,7 +602,7 @@ class Renderer():
     def _render_images(self, sample_id, nr_frames):
         """Loop over the frames and render each one to an image."""
 
-        logging.info(f'Rendering scene {str(sample_id)} frames')
+        logging.info(f'Rendering scene {str(sample_id)} frames ({str(nr_frames)} in total)')
 
         # iterate over the keyframes and render
         for frame in range(min(nr_frames, MAX_FRAMES)):

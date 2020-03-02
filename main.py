@@ -6,29 +6,31 @@ import os
 from extractor import Extractor
 from synthesiser import Synthesiser
 
+
 def main(args):
-  if not args.skip_extractor:
-    extractor = Extractor(video_folder=args.video_folder,
-                          output_folder=args.extractor_results_folder,
-                          render=args.render_extractor_results)
-    extractor.run()
+    if not args.skip_extractor:
+        extractor = Extractor(video_folder=args.video_folder,
+                              output_folder=args.extractor_results_folder,
+                              render=args.render_extractor_results)
+        extractor.run()
 
+    synthesiser = Synthesiser(blender=args.blender,
+                              motion_path=args.extractor_results_folder,
+                              target_size=args.target_size,
+                              num_frames=args.num_frames)
+    synthesiser.run()
 
-  synthesiser = Synthesiser(blender=args.blender,
-                            motion_path=args.extractor_results_folder,
-                            target_size=args.target_size,
-                            num_frames=args.num_frames)
-  synthesiser.run()
+    make_tarfile(args.output, 'output')
 
-  make_tarfile(args.output, 'output')
 
 def make_tarfile(archive_name, video_folder):
-  with tarfile.open(f'{archive_name}.tar.gz', 'w:gz') as tar:
-    tar.add(video_folder, arcname=os.path.basename(video_folder))
+    with tarfile.open(f'{archive_name}.tar.gz', 'w:gz') as tar:
+        tar.add(video_folder, arcname=os.path.basename(video_folder))
+
 
 if __name__ == '__main__':
-    logging.basicConfig(level='INFO',format='%(message)s')
-  
+    logging.basicConfig(level='INFO', format='%(message)s')
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--video_folder',
@@ -59,22 +61,22 @@ if __name__ == '__main__':
                         help='Target size of the synthetic dataset (number of videos)')
 
     parser.add_argument('--output',
-                        type=str,
-                        default='dataset',
-                        help='Name of the output archive')
+                         type=str,
+                         default='dataset',
+                         help='Name of the output archive')
 
-    parser.add_argument('--num_frames',
-                        type=int,
-                        default=200,
-                        help='Maximum number of frames for each synthetic video')
+     parser.add_argument('--num_frames',
+                          type=int,
+                          default=200,
+                          help='Maximum number of frames for each synthetic video')
 
-    # parser.add_argument('--archive',
-    #                     action='store_true',
-    #                     help='Create an archive with the whole synthetic dataset')
+      # parser.add_argument('--archive',
+      #                     action='store_true',
+      #                     help='Create an archive with the whole synthetic dataset')
 
-    args = parser.parse_args()
+      args = parser.parse_args()
 
-    if not args.skip_extractor and not args.video_folder:
-      raise Exception('--video_folder is required for the extractor.')
+       if not args.skip_extractor and not args.video_folder:
+            raise Exception('--video_folder is required for the extractor.')
 
-    main(args)
+        main(args)
