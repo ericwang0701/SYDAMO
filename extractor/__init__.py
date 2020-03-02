@@ -32,6 +32,7 @@ import numpy as np
 from tqdm import tqdm
 from multi_person_tracker import MPT
 from torch.utils.data import DataLoader
+import logging
 
 from .lib.models.vibe import VIBE_Demo
 from .lib.utils.renderer import Renderer
@@ -67,6 +68,9 @@ class Extractor():
     ):
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+        log_format = '[extractor] %(message)s'
+        logging.basicConfig(level='INFO', format=log_format)
+
         self.video_folder = video_folder
         self.output_folder = output_folder
         self.tracker_batch_size = tracker_batch_size
@@ -81,7 +85,11 @@ class Extractor():
         self.display = False # TODO: experiment with this
 
     def run(self):
-        for video_file in glob.glob(os.path.join(self.video_folder, '*')):
+        video_files = glob.glob(os.path.join(self.video_folder, '*'))
+
+        logging.info(f'Found {str(len(video_files))} video files')
+
+        for video_file in tqdm(video_files):
             if not os.path.isfile(video_file):
                 print(f'Skipping video \"{video_file}\": does not exist!')
             else:
@@ -94,7 +102,8 @@ class Extractor():
 
         image_folder, num_frames, img_shape = video_to_images(video_file, return_info=True)
 
-        print(f'Input video number of frames {num_frames}')
+        logging.info(f'Extracting motion from video {video_file} ({num_frames} frames)')
+
         orig_height, orig_width = img_shape[:2]
 
         total_time = time.time()
@@ -107,7 +116,6 @@ class Extractor():
             tracking_results = run_posetracker(video_file, staf_folder=self.staf_dir, display=self.display)
         else:
             # run multi object tracker
-
             mpt = MPT(
                 device=self.device,
                 batch_size=self.tracker_batch_size,
@@ -122,6 +130,8 @@ class Extractor():
         for person_id in list(tracking_results.keys()):
             if tracking_results[person_id]['frames'].shape[0] < MIN_NUM_FRAMES:
                 del tracking_results[person_id]
+
+        logging.info(f'Found {str(len(tracking_results.keys()))} persons')
 
         # ========= Define VIBE model ========= #
         model = VIBE_Demo(
@@ -139,10 +149,10 @@ class Extractor():
         ckpt = ckpt['gen_state_dict']
         model.load_state_dict(ckpt, strict=False)
         model.eval()
-        print(f'Loaded pretrained weights from \"{pretrained_file}\"')
+        # print(f'Loaded pretrained weights from \"{pretrained_file}\"')
 
         # ========= Run VIBE on each person ========= #
-        print(f'Running VIBE on each tracklet...')
+        # print(f'Running VIBE on each tracklet...')
         vibe_time = time.time()
         vibe_results = {}
         for person_id in tqdm(list(tracking_results.keys())):
@@ -267,17 +277,17 @@ class Extractor():
         end = time.time()
         fps = num_frames / (end - vibe_time)
 
-        print(f'VIBE FPS: {fps:.2f}')
+        # print(f'VIBE FPS: {fps:.2f}')
         total_time = time.time() - total_time
-        print(f'Total time spent: {total_time:.2f} seconds (including model loading time).')
-        print(f'Total FPS (including model loading time): {num_frames / total_time:.2f}.')
+        # print(f'Total time spent: {total_time:.2f} seconds (including model loading time).')
+        # print(f'Total FPS (including model loading time): {num_frames / total_time:.2f}.')
 
-        print(f'Saving output results to \"{os.path.join(output_path, "vibe_output.pkl")}\".')
+        # print(f'Saving output results to \"{os.path.join(output_path, "vibe_output.pkl")}\".')
 
         # joblib.dump(vibe_results, os.path.join(output_path, "vibe_output.pkl"))
 
         for person in vibe_results.keys():
-            dump_path = os.path.join(output_path, "vibe_output_%s.pkl" % person)
+            dump_path = os.path.join(output_path, "motion_%s.pkl" % person)
             os.makedirs(os.path.dirname(dump_path), exist_ok=True)
             pickle.dump(vibe_results[person], open(dump_path, 'wb'))
 
@@ -335,9 +345,8 @@ class Extractor():
             vid_name = os.path.basename(video_file)
             save_name = f'{vid_name.replace(".mp4", "")}_vibe_result.mp4'
             save_name = os.path.join(output_path, save_name)
-            print(f'Saving result video to {save_name}')
+            # print(f'Saving result video to {save_name}')
             images_to_video(img_folder=output_img_folder, output_vid_file=save_name)
             shutil.rmtree(output_img_folder)
 
         shutil.rmtree(image_folder)
-        print('================= END =================')

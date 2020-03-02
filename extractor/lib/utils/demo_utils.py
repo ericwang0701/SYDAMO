@@ -235,8 +235,7 @@ def images_to_video(img_folder, output_vid_file):
         '-level', '3.0', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', '-v', 'error', output_vid_file,
     ]
 
-    print(f'Running \"{" ".join(command)}\"')
-    subprocess.call(command)
+    subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
 
 
 def convert_crop_cam_to_orig_img(cam, bbox, img_width, img_height):
