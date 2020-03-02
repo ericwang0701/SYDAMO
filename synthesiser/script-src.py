@@ -616,7 +616,7 @@ class Renderer():
         cmd_ffmpeg = 'ffmpeg -y -r %s -i %s -c:v h264 -pix_fmt yuv420p -crf 23 %s' % (
             FRAMES_PER_SECOND, join(TMP_PATH, '%04d.png'), join(OUTPUT_PATH, render_filename))
 
-        subprocess.call(cmd_ffmpeg, stdout=subprocess.DEVNULL)
+        subprocess.call(cmd_ffmpeg, stdout=subprocess.DEVNULL).wait()
 
     def _clean(self):
         """Clean the directory holding temporary files."""
