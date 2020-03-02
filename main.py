@@ -13,10 +13,14 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--video_folder', type=str,
-                        help='input videos directory path')
+    parser.add_argument('--video_folder',
+                        type=str,
+                        help='input videos directory path',
+                        required=True)
 
-    parser.add_argument('--output_folder', type=str, default='output/',
+    parser.add_argument('--output_folder',
+                        type=str,
+                        default='output/',
                         help='output folder to write results')
 
     args = parser.parse_args()
