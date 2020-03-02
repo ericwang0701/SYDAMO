@@ -342,7 +342,7 @@ class Renderer():
                                       (0.0, 0.0, 0.0, 1.0)))
 
         bpy.context.scene.render.engine = 'CYCLES'
-        bpy.context.scene.render.device = 'GPU'
+        bpy.context.scene.cycles.device = 'GPU'
         bpy.context.scene.render.fps = FRAMES_PER_SECOND
         bpy.context.scene.cycles.shading_system = True
         bpy.context.scene.use_nodes = True
