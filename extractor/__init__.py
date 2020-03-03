@@ -109,7 +109,7 @@ class Extractor():
             # 1. Find tracklets in original video file
             tracklets = self._find_tracklets(video_file, image_folder)
 
-            self.run_vibe(video_file, image_folder, img_shape, tracklets, output_path)
+            self.run_vibe(video_file, image_folder, img_shape, tracklets, num_frames, output_path)
 
     def _find_tracklets(self, video_file, image_folder):
         if self.tracking_method == 'pose':
@@ -140,7 +140,7 @@ class Extractor():
         return tracking_results
 
 
-    def run_vibe(self, video_file, image_folder, img_shape, tracking_results, output_path):
+    def run_vibe(self, video_file, image_folder, img_shape, tracking_results, num_frames, output_path):
 
         orig_height, orig_width = img_shape[:2]
 
