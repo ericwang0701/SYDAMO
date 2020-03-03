@@ -263,6 +263,9 @@ class Renderer():
 
         if not os.path.exists(OUTPUT_PATH):
             os.makedirs(OUTPUT_PATH)
+        else:
+            self._clear_folder(OUTPUT_PATH)
+
 
     def run(self):
         """Collect motions, generate samples and synthesise videos"""
@@ -306,8 +309,8 @@ class Renderer():
             # Render this sample
             self._render(sample_id, nr_frames)
 
-            # Clean Blender for the next sample
-            self._clean()
+        # Clean Blender for the next sample
+        self._clear_folder(TMP_PATH)
 
     def _reset_blender(self):
         """Reset the Blender scene"""
@@ -647,11 +650,10 @@ class Renderer():
 
         subprocess.run(cmd_ffmpeg.split(' '))
 
-    def _clean(self):
-        """Clean the directory holding temporary files."""
+    def _clear_folder(self, path):
 
-        for filename in os.listdir(TMP_PATH):
-            file_path = os.path.join(TMP_PATH, filename)
+        for filename in os.listdir(path):
+            file_path = os.path.join(path, filename)
             try:
                 if os.path.isfile(file_path) or os.path.islink(file_path):
                     os.unlink(file_path)
