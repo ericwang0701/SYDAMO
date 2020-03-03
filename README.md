@@ -1,4 +1,6 @@
-# **Sy**nthetic **Da**tasets for Human **Mo**tion Recognition
+# Synthetic Datasets for Human Motion Recognition
+
+![Model architecture](model.png)
 
 ## Installation
 
