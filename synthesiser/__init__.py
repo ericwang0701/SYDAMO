@@ -24,13 +24,10 @@ class Synthesiser():
         # Compile configuration settings into a single script file
         self._compile()
         # Run Blender with the script
-        # subprocess.call(
-        #     f'{self.blender} -t 1 -P {compiled} -b -noaudio | grep \'^\[synthesiser\]\'', shell=True)
-
         blender_cmd = [self.blender, '-t', '1', '-P', compiled, '-b', '-noaudio']
         grep_cmd = ['|', 'grep', '\'^\[synthesiser\]\'']
 
-        subprocess.call(blender_cmd)
+        subprocess.run(blender_cmd)
 
     def _compile(self):
         script_source = open(source, 'r').read()

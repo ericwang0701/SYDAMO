@@ -1,3 +1,7 @@
+# Dataset Synthesis for Human Motion Recognition
+
+## Installation
+
 Requirements:
  - unzip
  - ffmpeg
@@ -7,3 +11,6 @@ Requirements:
 2. Install gdown from pip
 3. Install unzip and ffmpeg
 4. `pip install -r requirements.txt`
+
+## Usage
+

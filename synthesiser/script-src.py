@@ -74,6 +74,20 @@ def rodrigues2bshapes(pose):
     return (mat_rots, bshapes)
 
 
+def disable_logging(self):
+    logfile = 'blender_render.log'
+    open(logfile, 'a').close()
+    old = os.dup(1)
+    sys.stdout.flush()
+    os.close(1)
+    os.open(logfile, os.O_WRONLY)
+    return old
+
+def enable_logging(self, old):
+    os.close(1)
+    os.dup(old)
+    os.close(old)
+
 class Motion():
     """
     The Motion class is instantiated for every person in the captured motion data.
@@ -191,9 +205,15 @@ class Motion():
             SMPL_PATH, 'basicModel_%s_lbs_10_207_0_v1.0.2.fbx' % self.gender[0])
         # Copy list of all objects that are in Blender BEFORE importing
         old = list(bpy.data.objects)
+
+        log_file = disable_logging()
+
         # Import SMPL FBX file
         bpy.ops.import_scene.fbx(
             filepath=filepath, global_scale=100, axis_forward='Y', axis_up='Z')
+
+        enable_logging(log_file)
+
         # Copy list of all objects that are in Blender AFTER importing
         new = list(bpy.data.objects)
         delta = [x for x in new if not x in old]
@@ -287,8 +307,12 @@ class Renderer():
         # Set motion and position keyframes to create the animation
         self._animate(sample_id, nr_frames, motion_list)
 
+        log_file = disable_logging()
+
         # Render this sample
         self._render(sample_id, nr_frames)
+
+        enable_logging(log_file)
 
         # Clean Blender for the next sample
         self._clean()
