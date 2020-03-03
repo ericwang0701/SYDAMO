@@ -20,7 +20,7 @@ import os
 import platform
 
 # Hacky-tacky way to use EGL only on the headless VM (which runs Linux) but not on my MacBook (Darwin)
-if platform.system() is 'Linux':
+if platform.system() == 'Linux':
     os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 import cv2
