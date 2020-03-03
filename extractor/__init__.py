@@ -53,6 +53,7 @@ from .lib.utils.demo_utils import (
 )
 
 MIN_NUM_FRAMES = 25
+BBOX_SCALE = 1.1
 
 class Extractor():
 
@@ -87,31 +88,30 @@ class Extractor():
         self.display = False # TODO: experiment with this
 
     def run(self):
-        video_files = glob.glob(os.path.join(self.video_folder, '*'))
+        """Main function to execute the extractor"""
 
+        # List of all files in the video folder
+        video_files = glob.glob(os.path.join(self.video_folder, '*'))
         logging.info(f'Found {str(len(video_files))} video files')
 
         for video_file in video_files:
             if not os.path.isfile(video_file):
                 logging.error(f'Skipping video \"{video_file}\": does not exist!')
-            else:
-                self.run_vibe(video_file)
+                continue
 
-    def run_vibe(self, video_file):
-        
-        output_path = os.path.join(self.output_folder, os.path.basename(video_file).replace('.mp4', ''))
-        os.makedirs(output_path, exist_ok=True)
+            # Create a folder for the output pickles
+            name = os.path.basename(video_file).replace('.mp4', '')
+            output_path = os.path.join(self.output_folder, name)
+            os.makedirs(output_path, exist_ok=True)
 
-        image_folder, num_frames, img_shape = video_to_images(video_file, return_info=True)
+            image_folder, num_frames, img_shape = video_to_images(video_file, return_info=True)
 
-        logging.info(f'Extracting motion from video {video_file} ({num_frames} frames)')
+            # 1. Find tracklets in original video file
+            tracklets = self._find_tracklets(video_file, image_folder, img_shape)
 
-        orig_height, orig_width = img_shape[:2]
+            self.run_vibe(video_file, image_folder, img_shape, tracklets, output_path)
 
-        total_time = time.time()
-
-        # ========= Run tracking ========= #
-        bbox_scale = 1.1
+    def _find_tracklets(self, video_file, image_folder):
         if self.tracking_method == 'pose':
             if not os.path.isabs(video_file):
                 video_file = os.path.join(os.getcwd(), video_file)
@@ -137,6 +137,13 @@ class Extractor():
 
         logging.info(f'Found {str(len(tracking_results.keys()))} person(s), num. frames = {" ,".join(mpt_num_frames)}')
 
+        return tracking_results
+
+
+    def run_vibe(self, video_file, image_folder, img_shape, tracking_results, output_path):
+
+        orig_height, orig_width = img_shape[:2]
+
         # ========= Define VIBE model ========= #
         model = VIBE_Demo(
             seqlen=16,
@@ -153,11 +160,10 @@ class Extractor():
         ckpt = ckpt['gen_state_dict']
         model.load_state_dict(ckpt, strict=False)
         model.eval()
-        # print(f'Loaded pretrained weights from \"{pretrained_file}\"')
+
+
 
         # ========= Run VIBE on each person ========= #
-        # print(f'Running VIBE on each tracklet...')
-        # vibe_time = time.time()
         vibe_results = {}
         for person_id in list(tracking_results.keys()):
             bboxes = joints2d = None
@@ -174,7 +180,7 @@ class Extractor():
                 frames=frames,
                 bboxes=bboxes,
                 joints2d=joints2d,
-                scale=bbox_scale,
+                scale=BBOX_SCALE,
             )
 
             bboxes = dataset.bboxes
@@ -278,17 +284,6 @@ class Extractor():
 
         del model
 
-        # end = time.time()
-        # fps = num_frames / (end - vibe_time)
-
-        # print(f'VIBE FPS: {fps:.2f}')
-        # total_time = time.time() - total_time
-        # print(f'Total time spent: {total_time:.2f} seconds (including model loading time).')
-        # print(f'Total FPS (including model loading time): {num_frames / total_time:.2f}.')
-
-        # print(f'Saving output results to \"{os.path.join(output_path, "vibe_output.pkl")}\".')
-
-        # joblib.dump(vibe_results, os.path.join(output_path, "vibe_output.pkl"))
 
         for person in vibe_results.keys():
             dump_path = os.path.join(output_path, "%s.pkl" % person)

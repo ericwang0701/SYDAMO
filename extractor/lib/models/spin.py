@@ -493,12 +493,3 @@ class SMPL(_SMPL):
                              betas=smpl_output.betas,
                              full_pose=smpl_output.full_pose)
         return output
-
-
-def get_pretrained_hmr():
-    device = 'cuda'
-    model = hmr().to(device)
-    checkpoint = torch.load('data/vibe_data/spin_model_checkpoint.pth.tar')
-    model.load_state_dict(checkpoint['model'], strict=False)
-    model.eval()
-    return model
