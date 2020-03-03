@@ -1,4 +1,4 @@
-# Dataset Synthesis for Human Motion Recognition
+# **Sy**nthetic **Da**tasets for Human **Mo**tion Recognition
 
 ## Installation
 
