@@ -14,6 +14,7 @@ def main(args):
         extractor.run()
 
     synthesiser = Synthesiser(blender=args.blender,
+                              debug_blender=args.debug_blender,
                               motion_path=args.extractor_results_folder,
                               target_size=args.target_size,
                               num_frames=args.num_frames)
@@ -65,6 +66,10 @@ if __name__ == '__main__':
                         type=int,
                         default=200,
                         help='Maximum number of frames for each synthetic video')
+
+    parser.add_argument('--debug_blender',
+                        action='store_true',
+                        help='Open Blender with the first scene, for debugging purposes.')
 
     args = parser.parse_args()
 

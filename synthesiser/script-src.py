@@ -250,7 +250,7 @@ class Renderer():
 
     def __init__(self):
         # Set up logging format
-        log_format = '[synthesiser] %(message)s'
+        log_format = '%(message)s'
         logging.basicConfig(level='INFO', format=log_format)
 
         # Load CEASAR shape data
@@ -302,11 +302,12 @@ class Renderer():
         # Set motion and position keyframes to create the animation
         self._animate(sample_id, nr_frames, motion_list)
 
-        # Render this sample
-        self._render(sample_id, nr_frames)
+        if not NO_RENDER:
+            # Render this sample
+            self._render(sample_id, nr_frames)
 
-        # Clean Blender for the next sample
-        self._clean()
+            # Clean Blender for the next sample
+            self._clean()
 
     def _reset_blender(self):
         """Reset the Blender scene"""
@@ -487,9 +488,9 @@ class Renderer():
                         motion.mesh.data.shape_keys.key_blocks[key].keyframe_insert(
                             'value', index=-1, frame=frame)
 
-                walk = True
+                keep_walking = True
                 walk_i = 0
-                while walk:
+                while keep_walking:
                     walk_i += 1
                     # get a new location from the random walk algorithm
                     new_location = self._random_walk(motion, frame, walk_i)
@@ -499,7 +500,8 @@ class Renderer():
                     bpy.context.view_layer.update()
                     # Calculate overlap and use it to determine if walk should be extended
                     # Overlap can only be calculated when scene is updated, not within random walk algorithm
-                    walk = self._overlap(motion.mesh.name)
+                    keep_walking = self._overlap(motion.mesh.name)
+
                 motion.armature.keyframe_insert('location', frame=frame)
 
     def _max_x_from_z(self, z):
@@ -562,20 +564,21 @@ class Renderer():
             motion.movement['x'][0] = np.random.rand(
             ) * abs(self._max_x_from_z(z_0)) * 2 - abs(self._max_x_from_z(z_0))
         else:
-            if tries > 5:
-                # When a person bumps into someone else, the speed is reduced and direction is reversed
+            # When a person bumps into someone else, the speed is reduced and direction is reversed
+            if tries > 10:
                 motion.movement['speed_z'] = - \
-                    0.5 * motion.movement['speed_z']
+                    0.25 * motion.movement['speed_z']
                 motion.movement['speed_x'] = - \
-                    0.5 * motion.movement['speed_x']
+                    0.25 * motion.movement['speed_x']
 
             if tries > 100:
                 logging.info('Nr tries = %s' % str(tries))
+                logging.warning('IF THIS OCCURS, IT SHOULD PROBABLY BE FIXED BETTER')
 
             delta_z = np.random.normal(
-                motion.movement['speed_z'], 0.01 * (tries % 10 + 1))
+                motion.movement['speed_z'], 0.005 * (tries % 10 + 1))
             delta_x = np.random.normal(
-                motion.movement['speed_x'], 0.01 * (tries % 10 + 1))
+                motion.movement['speed_x'], 0.005 * (tries % 10 + 1))
 
             new_z = motion.movement['z'][frame - 1] + delta_z
             new_x = motion.movement['x'][frame - 1] + delta_x
@@ -598,9 +601,9 @@ class Renderer():
                 motion.movement['speed_z'] = 0
 
             motion.movement['speed_x'] = np.random.normal(
-                motion.movement['speed_x'], 0.001)
+                motion.movement['speed_x'], 0.0005)
             motion.movement['speed_z'] = np.random.normal(
-                motion.movement['speed_z'], 0.001)
+                motion.movement['speed_z'], 0.0005)
 
             motion.movement['z'][frame] = new_z
             motion.movement['x'][frame] = new_x
