@@ -1,11 +1,10 @@
 import argparse
 import logging
-import tarfile
 import os
 
 from extractor import Extractor
 from synthesiser import Synthesiser
-
+from utils import make_tarfile
 
 def main(args):
     if not args.skip_extractor:
@@ -22,10 +21,7 @@ def main(args):
 
     make_tarfile(args.output, 'output')
 
-
-def make_tarfile(archive_name, video_folder):
-    with tarfile.open(f'{archive_name}.tar.gz', 'w:gz') as tar:
-        tar.add(video_folder, arcname=os.path.basename(video_folder))
+    logging.info('Done.')
 
 
 if __name__ == '__main__':
@@ -63,16 +59,12 @@ if __name__ == '__main__':
     parser.add_argument('--output',
                         type=str,
                         default='dataset',
-                        help='Name of the output archive')
+                        help='Where to write the output archive to')
 
     parser.add_argument('--num_frames',
                         type=int,
                         default=200,
                         help='Maximum number of frames for each synthetic video')
-
-    # parser.add_argument('--archive',
-    #                     action='store_true',
-    #                     help='Create an archive with the whole synthetic dataset')
 
     args = parser.parse_args()
 
