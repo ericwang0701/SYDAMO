@@ -37,7 +37,7 @@ from multi_person_tracker import MPT
 from torch.utils.data import DataLoader
 import logging
 
-from .lib.models.vibe import VIBE_Demo
+from .lib.models.vibe import PoseGenerator
 from .lib.utils.renderer import Renderer
 from .lib.dataset.inference import Inference
 from .lib.data_utils.kp_utils import convert_kps
@@ -99,25 +99,30 @@ class Extractor():
                 logging.error(f'Skipping video \"{video_file}\": does not exist!')
                 continue
 
+            # Step 0
+
             # Create a folder for the output pickles
             name = os.path.basename(video_file).replace('.mp4', '')
             output_path = os.path.join(self.output_folder, name)
             os.makedirs(output_path, exist_ok=True)
-
+            # Split video into images
             image_folder, num_frames, img_shape = video_to_images(video_file, return_info=True)
 
-            # 1. Find tracklets in original video file
+            # Step 1
+
+            # Find tracklets using OpenPose or YOLOv3
             tracklets = self._find_tracklets(video_file, image_folder)
 
             self.run_vibe(video_file, image_folder, img_shape, tracklets, num_frames, output_path)
 
     def _find_tracklets(self, video_file, image_folder):
         if self.tracking_method == 'pose':
+            # Use OpenPose Spatio-Temporal Affinity Fields to find 2D poses in video
             if not os.path.isabs(video_file):
                 video_file = os.path.join(os.getcwd(), video_file)
             tracking_results = run_posetracker(video_file, staf_folder=self.staf_dir, display=self.display)
         else:
-            # run multi object tracker
+            # Use Multi-Person Tracker with YOLOv3 and SORT to find bounding boxes in video
             mpt = MPT(
                 device=self.device,
                 batch_size=self.tracker_batch_size,
@@ -128,7 +133,7 @@ class Extractor():
             )
             tracking_results = mpt(image_folder)
 
-        # remove tracklets if num_frames is less than MIN_NUM_FRAMES
+        # Remove tracklets that are too short
         for person_id in list(tracking_results.keys()):
             if tracking_results[person_id]['frames'].shape[0] < MIN_NUM_FRAMES:
                 del tracking_results[person_id]
@@ -145,26 +150,22 @@ class Extractor():
         orig_height, orig_width = img_shape[:2]
 
         # ========= Define VIBE model ========= #
-        model = VIBE_Demo(
+        model = PoseGenerator(
             seqlen=16,
             n_layers=2,
-            hidden_size=1024,
-            add_linear=True,
-            use_residual=True
+            hidden_size=1024
         ).to(self.device)
 
         # ========= Load pretrained weights ========= #
         pretrained_file = download_ckpt(use_3dpw=True)
         ckpt = torch.load(pretrained_file, map_location=self.device)
-        # print(f'Performance of pretrained model on 3DPW: {ckpt["performance"]}')
         ckpt = ckpt['gen_state_dict']
         model.load_state_dict(ckpt, strict=False)
         model.eval()
 
-
-
         # ========= Run VIBE on each person ========= #
         vibe_results = {}
+
         for person_id in list(tracking_results.keys()):
             bboxes = joints2d = None
 

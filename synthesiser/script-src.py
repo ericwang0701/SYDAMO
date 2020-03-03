@@ -225,7 +225,7 @@ class Motion():
         # Hide the armature artifacts
         self.armature.hide_set(True)
         # Rotate up and one up (TODO: why are estimated poses upside down???)
-        self.armature.rotation_euler = Euler((np.pi, 0, 0))
+        self.armature.rotation_euler = Euler((np.pi, np.random.rand() * np.pi, 0))
 
         # Autosmooth creates artifacts so turn it off
         self.mesh.data.use_auto_smooth = False
@@ -503,6 +503,7 @@ class Renderer():
                     keep_walking = self._overlap(motion.mesh.name)
 
                 motion.armature.keyframe_insert('location', frame=frame)
+
 
     def _max_x_from_z(self, z):
         """Returns the maximal value of the X coordinate given the Z coordinate

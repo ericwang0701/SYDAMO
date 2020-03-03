@@ -14,3 +14,7 @@ Requirements:
 
 ## Usage
 
+See `python main.py --help` for all options.
+
+Examples:
+`python main.py --video_folder ~/videos`
