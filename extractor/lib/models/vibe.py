@@ -109,85 +109,85 @@ class TemporalEncoderWAttention(nn.Module):
         return y
 
 
-class VIBE(nn.Module):
-    def __init__(
-            self,
-            seqlen,
-            batch_size=64,
-            n_layers=1,
-            hidden_size=2048,
-            pretrained='data/vibe_data/spin_model_checkpoint.pth.tar',
-            add_linear=False,
-            bidirectional=False,
-            attention=False,
-            attention_cfg=None,
-            use_residual=True,
-            use_6d=True,
-            disable_temporal=False
-    ):
+# class VIBE(nn.Module):
+#     def __init__(
+#             self,
+#             seqlen,
+#             batch_size=64,
+#             n_layers=1,
+#             hidden_size=2048,
+#             pretrained='data/vibe_data/spin_model_checkpoint.pth.tar',
+#             add_linear=False,
+#             bidirectional=False,
+#             attention=False,
+#             attention_cfg=None,
+#             use_residual=True,
+#             use_6d=True,
+#             disable_temporal=False
+#     ):
 
-        super(VIBE, self).__init__()
+#         super(VIBE, self).__init__()
 
-        self.seqlen = seqlen
-        self.batch_size = batch_size
-        self.disable_temporal = disable_temporal
+#         self.seqlen = seqlen
+#         self.batch_size = batch_size
+#         self.disable_temporal = disable_temporal
 
-        if attention:
-            cfg = attention_cfg
-            self.encoder = TemporalEncoderWAttention(
-                hidden_size=hidden_size,
-                bidirectional=bidirectional,
-                add_linear=add_linear,
-                attention_size=cfg.SIZE,
-                attention_layers=cfg.LAYERS,
-                attention_dropout=cfg.DROPOUT,
-                use_residual=use_residual,
-            )
-        else:
-            self.encoder = TemporalEncoder(
-                n_layers=n_layers,
-                hidden_size=hidden_size,
-                bidirectional=bidirectional,
-                add_linear=add_linear,
-                use_residual=use_residual,
-            )
+#         if attention:
+#             cfg = attention_cfg
+#             self.encoder = TemporalEncoderWAttention(
+#                 hidden_size=hidden_size,
+#                 bidirectional=bidirectional,
+#                 add_linear=add_linear,
+#                 attention_size=cfg.SIZE,
+#                 attention_layers=cfg.LAYERS,
+#                 attention_dropout=cfg.DROPOUT,
+#                 use_residual=use_residual,
+#             )
+#         else:
+#             self.encoder = TemporalEncoder(
+#                 n_layers=n_layers,
+#                 hidden_size=hidden_size,
+#                 bidirectional=bidirectional,
+#                 add_linear=add_linear,
+#                 use_residual=use_residual,
+#             )
 
-        # regressor can predict cam, pose and shape params in an iterative way
-        self.regressor = Regressor(use_6d=use_6d)
+#         # regressor can predict cam, pose and shape params in an iterative way
+#         self.regressor = Regressor(use_6d=use_6d)
 
-        if pretrained and os.path.isfile(pretrained):
-            pretrained_dict = torch.load(pretrained, map_location=self.device)['model']
+#         if pretrained and os.path.isfile(pretrained):
+#             pretrained_dict = torch.load(pretrained, map_location=self.device)['model']
 
-            if not use_6d:
-                del pretrained_dict['decpose.weight']
-                del pretrained_dict['decpose.bias']
-                del pretrained_dict['fc1.weight']
-                del pretrained_dict['fc1.bias']
+#             if not use_6d:
+#                 del pretrained_dict['decpose.weight']
+#                 del pretrained_dict['decpose.bias']
+#                 del pretrained_dict['fc1.weight']
+#                 del pretrained_dict['fc1.bias']
 
-            self.regressor.load_state_dict(pretrained_dict, strict=False)
-            # print(f'=> loaded pretrained model from \'{pretrained}\'')
-
-
-    def forward(self, input, J_regressor=None):
-        # input size NTF
-        batch_size, seqlen = input.shape[:2]
-
-        if self.disable_temporal:
-            feature = input.reshape(-1, input.size(-1))
-        else:
-            feature = self.encoder(input)
-            feature = feature.reshape(-1, feature.size(-1))
+#             self.regressor.load_state_dict(pretrained_dict, strict=False)
+#             # print(f'=> loaded pretrained model from \'{pretrained}\'')
 
 
-        smpl_output = self.regressor(feature, J_regressor=J_regressor)
-        for s in smpl_output:
-            s['theta'] = s['theta'].reshape(batch_size, seqlen, -1)
-            s['verts'] = s['verts'].reshape(batch_size, seqlen, -1, 3)
-            s['kp_2d'] = s['kp_2d'].reshape(batch_size, seqlen, -1, 2)
-            s['kp_3d'] = s['kp_3d'].reshape(batch_size, seqlen, -1, 3)
-            s['rotmat'] = s['rotmat'].reshape(batch_size, seqlen, -1, 3, 3)
+#     def forward(self, input, J_regressor=None):
+#         # input size NTF
+#         batch_size, seqlen = input.shape[:2]
 
-        return smpl_output
+#         if self.disable_temporal:
+#             feature = input.reshape(-1, input.size(-1))
+#         else:
+#             feature = self.encoder(input)
+#             feature = feature.reshape(-1, feature.size(-1))
+
+
+#         smpl_output = self.regressor(feature, J_regressor=J_regressor)
+#         for s in smpl_output:
+#             s['theta'] = s['theta'].reshape(batch_size, seqlen, -1)
+#             s['verts'] = s['verts'].reshape(batch_size, seqlen, -1, 3)
+#             s['kp_2d'] = s['kp_2d'].reshape(batch_size, seqlen, -1, 2)
+#             s['kp_3d'] = s['kp_3d'].reshape(batch_size, seqlen, -1, 3)
+#             s['rotmat'] = s['rotmat'].reshape(batch_size, seqlen, -1, 3, 3)
+
+#         return smpl_output
 
 class VIBE_Demo(nn.Module):
     def __init__(
@@ -203,14 +203,14 @@ class VIBE_Demo(nn.Module):
             attention_cfg=None,
             use_residual=True,
             use_6d=True,
-            disable_temporal=False
+            # disable_temporal=False
     ):
 
         super(VIBE_Demo, self).__init__()
 
         self.seqlen = seqlen
         self.batch_size = batch_size
-        self.disable_temporal = disable_temporal
+        # self.disable_temporal = disable_temporal
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
         if attention:
@@ -259,10 +259,10 @@ class VIBE_Demo(nn.Module):
 
         feature = self.hmr.feature_extractor(input.reshape(-1, nc, h, w))
 
-        if not self.disable_temporal:
-            feature = feature.reshape(batch_size, seqlen, -1)
-            feature = self.encoder(feature)
-            feature = feature.reshape(-1, feature.size(-1))
+        # if not self.disable_temporal:
+        feature = feature.reshape(batch_size, seqlen, -1)
+        feature = self.encoder(feature)
+        feature = feature.reshape(-1, feature.size(-1))
 
 
         smpl_output = self.regressor(feature, J_regressor=J_regressor)

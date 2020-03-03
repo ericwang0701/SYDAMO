@@ -107,7 +107,7 @@ class Extractor():
             image_folder, num_frames, img_shape = video_to_images(video_file, return_info=True)
 
             # 1. Find tracklets in original video file
-            tracklets = self._find_tracklets(video_file, image_folder, img_shape)
+            tracklets = self._find_tracklets(video_file, image_folder)
 
             self.run_vibe(video_file, image_folder, img_shape, tracklets, output_path)
 
