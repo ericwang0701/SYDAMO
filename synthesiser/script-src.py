@@ -28,7 +28,6 @@ from mathutils.bvhtree import BVHTree
 # Data path locations
 BG_PATH = 'data/backgrounds/'
 TEXTURES_PATH = 'data/textures/'
-# MOTION_PATH = 'data/motion/'
 SMPL_PATH = 'data/smpl/'
 TMP_PATH = 'tmp/'
 SHAPE_PATH = 'data/shape/shape_data.pkl'
@@ -45,10 +44,6 @@ MIN_Z = -50
 RENDER_WIDTH = 640
 RENDER_HEIGHT = 360
 FRAMES_PER_SECOND = 25
-# MAX_FRAMES = 200
-
-# Target size of the output dataset
-# TARGET_SIZE = 10
 
 SMPL_BONE_NAMES = ['Pelvis', 'L_Hip', 'R_Hip', 'Spine1', 'L_Knee', 'R_Knee', 'Spine2', 'L_Ankle', 'R_Ankle', 'Spine3', 'L_Foot', 'R_Foot',
                    'Neck', 'L_Collar', 'R_Collar', 'Head', 'L_Shoulder', 'R_Shoulder', 'L_Elbow', 'R_Elbow', 'L_Wrist', 'R_Wrist', 'L_Hand', 'R_Hand']
@@ -74,7 +69,7 @@ def rodrigues2bshapes(pose):
     return (mat_rots, bshapes)
 
 
-def disable_logging(self):
+def disable_logging():
     logfile = 'blender_render.log'
     open(logfile, 'a').close()
     old = os.dup(1)
@@ -83,7 +78,7 @@ def disable_logging(self):
     os.open(logfile, os.O_WRONLY)
     return old
 
-def enable_logging(self, old):
+def enable_logging(old):
     os.close(1)
     os.dup(old)
     os.close(old)
@@ -307,12 +302,8 @@ class Renderer():
         # Set motion and position keyframes to create the animation
         self._animate(sample_id, nr_frames, motion_list)
 
-        log_file = disable_logging()
-
         # Render this sample
         self._render(sample_id, nr_frames)
-
-        enable_logging(log_file)
 
         # Clean Blender for the next sample
         self._clean()
@@ -626,14 +617,19 @@ class Renderer():
     def _render_images(self, sample_id, nr_frames):
         """Loop over the frames and render each one to an image."""
 
-        logging.info(f'Rendering scene {str(sample_id)} frames ({str(nr_frames)} in total)')
+        logging.info(f'Rendering scene {str(sample_id)} frames ({str(min(nr_frames, MAX_FRAMES))} in total)')
 
         # iterate over the keyframes and render
         for frame in range(min(nr_frames, MAX_FRAMES)):
             bpy.context.scene.frame_set(frame)
             filepath = join(TMP_PATH, '%04d.png' % frame)
             bpy.context.scene.render.filepath = filepath
+
+            log_file = disable_logging()
+
             bpy.ops.render.render(write_still=True)
+
+            enable_logging(log_file)
 
     def _combine_images_as_video(self, sample_id):
         """Use ffmpeg to create a video from the already rendered image frames."""
@@ -642,10 +638,10 @@ class Renderer():
 
         render_filename = str(sample_id) + '.mp4'
         # Combine the frames into a video using ffmpeg
-        cmd_ffmpeg = 'ffmpeg -y -r %s -i %s -c:v h264 -pix_fmt yuv420p -crf 23 %s' % (
+        cmd_ffmpeg = 'ffmpeg -y -r %s -i %s -c:v h264 -pix_fmt yuv420p -crf 23 %s -loglevel quiet' % (
             FRAMES_PER_SECOND, join(TMP_PATH, '%04d.png'), join(OUTPUT_PATH, render_filename))
 
-        subprocess.call(cmd_ffmpeg.split(' '), stdout=subprocess.DEVNULL)
+        subprocess.run(cmd_ffmpeg.split(' '))
 
     def _clean(self):
         """Clean the directory holding temporary files."""

@@ -17,7 +17,11 @@
 # Adapted by Olivier Jansen
 
 import os
-os.environ['PYOPENGL_PLATFORM'] = 'egl'
+import platform
+
+# Hacky-tacky way to use EGL only on the headless VM (which runs Linux) but not on my MacBook (Darwin)
+if platform.system() is 'Linux':
+    os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 import cv2
 import time
@@ -287,7 +291,7 @@ class Extractor():
         # joblib.dump(vibe_results, os.path.join(output_path, "vibe_output.pkl"))
 
         for person in vibe_results.keys():
-            dump_path = os.path.join(output_path, "motion_%s.pkl" % person)
+            dump_path = os.path.join(output_path, "%s.pkl" % person)
             os.makedirs(os.path.dirname(dump_path), exist_ok=True)
             pickle.dump(vibe_results[person], open(dump_path, 'wb'))
 

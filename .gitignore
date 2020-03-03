@@ -134,3 +134,4 @@ dmypy.json
 /data/motion
 /tmp
 /synthesiser/script.py
+dataset.tar.gz
