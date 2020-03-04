@@ -11,8 +11,9 @@ Requirements:
  - unzip (for now)
  - gdown (for now)
 
-1. Create a new virtualenv with Python >= 3.7.
-2. `pip install -r requirements.txt`
+1. Create a new virtualenv with Python >= 3.7. (e.g. `python -m venv venv`)
+2. Activate environment (e.g. `source venv/bin/activate`)
+3. `pip install -r requirements.txt`
 
 ## Usage
 

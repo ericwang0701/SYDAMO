@@ -158,7 +158,7 @@ class Extractor():
         ).to(self.device)
 
         url = 'https://oddityweights1.blob.core.windows.net/weights/vibe_model_w_3dpw.pth.tar'
-        model = CheckpointsLoader('/').load(model, url, strict=False, checkpoints_key='gen_state_dict')
+        model = CheckpointsLoader('checkpoints').load(model, url, strict=False, checkpoints_key='gen_state_dict')
         model.eval()
 
         # # ========= Load pretrained weights ========= #
