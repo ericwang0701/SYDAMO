@@ -203,28 +203,6 @@ def video_to_images(vid_file, img_folder=None, return_info=False):
         return img_folder
 
 
-def download_url(url, outdir):
-    cmd = ['wget', '-c', url, '-P', outdir]
-    subprocess.call(cmd)
-
-
-def download_ckpt(outdir='data/vibe_data', use_3dpw=True):
-    os.makedirs(outdir, exist_ok=True)
-
-    if use_3dpw:
-        ckpt_file = 'data/vibe_data/vibe_model_w_3dpw.pth.tar'
-        url = 'https://www.dropbox.com/s/41ozgqorcp095ja/vibe_model_w_3dpw.pth.tar'
-        if not os.path.isfile(ckpt_file):
-            download_url(url=url, outdir=outdir)
-    else:
-        ckpt_file = 'extractor/data/vibe_data/vibe_model_wo_3dpw.pth.tar'
-        url = 'https://www.dropbox.com/s/amj2p8bmf6g56k6/vibe_model_wo_3dpw.pth.tar'
-        if not os.path.isfile(ckpt_file):
-            download_url(url=url, outdir=outdir)
-
-    return ckpt_file
-
-
 def images_to_video(img_folder, output_vid_file):
     os.makedirs(img_folder, exist_ok=True)
 

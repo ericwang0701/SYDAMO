@@ -49,8 +49,7 @@ from .lib.utils.demo_utils import (
     convert_crop_cam_to_orig_img,
     prepare_rendering_results,
     video_to_images,
-    images_to_video,
-    download_ckpt,
+    images_to_video
 )
 
 MIN_NUM_FRAMES = 25
@@ -61,6 +60,8 @@ class Extractor():
     def __init__(
         self,
         video_folder,
+        pretrained_vibe,
+        pretrained_spin,
         output_folder='output/',
         tracker_batch_size=12,
         tracking_method='bbox',
@@ -76,6 +77,9 @@ class Extractor():
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
         self.video_folder = video_folder
+        self.pretrained_vibe = pretrained_vibe
+        self.pretrained_spin = pretrained_spin
+
         self.output_folder = output_folder
         self.tracker_batch_size = tracker_batch_size
         self.tracking_method = tracking_method
@@ -145,7 +149,8 @@ class Extractor():
 
         mpt_num_frames = [str(person['frames'].shape[0]) for person in tracking_results.values()]
 
-        logging.info(f'Found {str(len(tracking_results.keys()))} person(s), num. frames = {" ,".join(mpt_num_frames)}')
+        method = 'YOLOv3' if self.tracking_method == 'bbox' else 'Openpose'
+        logging.info(f'Found {str(len(tracking_results.keys()))} person(s) using {method}, num. frames = {" ,".join(mpt_num_frames)}')
 
         return tracking_results
 
@@ -158,11 +163,11 @@ class Extractor():
         model = PoseGenerator(
             seqlen=16,
             n_layers=2,
-            hidden_size=1024
+            hidden_size=1024,
+            pretrained_spin=self.pretrained_spin
         ).to(self.device)
 
-        url = 'https://oddityweights1.blob.core.windows.net/weights/vibe_model_w_3dpw.pth.tar'
-        model = CheckpointsLoader('checkpoints').load(model, url, strict=False, checkpoints_key='gen_state_dict')
+        model = CheckpointsLoader('checkpoints').load(model, self.pretrained_vibe, strict=False, checkpoints_key='gen_state_dict')
         model.eval()
 
 
@@ -292,14 +297,13 @@ class Extractor():
             dump_path = os.path.join(output_path, "%s.pkl" % person)
             pickle.dump(vibe_results[person], open(dump_path, 'wb'))
 
+        logging.info(f'Estimated {str(len(vibe_results.keys()))} 3D poses using VIBE')
 
         if self.render:
             renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True)
 
             output_img_folder = f'{image_folder}_output'
             os.makedirs(output_img_folder, exist_ok=True)
-
-            print(f'Rendering output video, writing frames to {output_img_folder}')
 
             # prepare results for rendering
             frame_results = prepare_rendering_results(vibe_results, num_frames)

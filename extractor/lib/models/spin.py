@@ -57,9 +57,9 @@ JOINT_NAMES = [
 # Dict containing the joints in numerical order
 JOINT_IDS = {JOINT_NAMES[i]: i for i in range(len(JOINT_NAMES))}
 
-JOINT_REGRESSOR_TRAIN_EXTRA = 'data/vibe_data/J_regressor_extra.npy'
-SMPL_MEAN_PARAMS = 'data/vibe_data/smpl_mean_params.npz'
-SMPL_MODEL_DIR = 'data/vibe_data'
+JOINT_REGRESSOR_TRAIN_EXTRA = 'data/smpl/J_regressor_extra.npy'
+SMPL_MEAN_PARAMS = 'data/smpl/smpl_mean_params.npz'
+SMPL_MODEL_DIR = 'data/smpl'
 H36M_TO_J17 = [6, 5, 4, 1, 2, 3, 16, 15, 14, 11, 12, 13, 8, 10, 0, 7, 9]
 H36M_TO_J14 = H36M_TO_J17[:14]
 
@@ -300,7 +300,7 @@ class HMR(nn.Module):
 
 
 class Regressor(nn.Module):
-    def __init__(self, smpl_mean_params='data/vibe_data/smpl_mean_params.npz'):
+    def __init__(self, smpl_mean_params=SMPL_MEAN_PARAMS):
         super(Regressor, self).__init__()
 
         npose = 24 * 6
@@ -387,7 +387,7 @@ class Regressor(nn.Module):
         return output
 
 
-def hmr(smpl_mean_params='data/vibe_data/smpl_mean_params.npz', pretrained=True, **kwargs):
+def hmr(smpl_mean_params=SMPL_MEAN_PARAMS, pretrained=True, **kwargs):
     """
     Constructs an HMR model with ResNet50 backbone.
     Args:

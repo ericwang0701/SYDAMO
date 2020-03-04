@@ -45,7 +45,7 @@ class TemporalSMPLify():
         self.num_iters = num_iters
 
         # GMM pose prior
-        self.pose_prior = MaxMixturePrior(prior_folder='data/vibe_data',
+        self.pose_prior = MaxMixturePrior(prior_folder='data/vibe',
                                           num_gaussians=8,
                                           dtype=torch.float32).to(device)
         self.use_lbfgs = use_lbfgs

@@ -89,6 +89,17 @@ if __name__ == '__main__':
                         action='store_true',
                         help='')
 
+
+    parser.add_argument('--pretrained_vibe',
+                        type=str,
+                        default='https://oddityweights1.blob.core.windows.net/weights/vibe_model_w_3dpw.pth.tar',
+                        help='URL to downloadable checkpoint file for pretrained VIBE')
+
+    parser.add_argument('--pretrained_spin',
+                        type=str,
+                        default='https://oddityweights1.blob.core.windows.net/weights/spin_model_checkpoint.pth.tar',
+                        help='URL to downloadable checkpoint file for pretrained SPIN')
+
     args = parser.parse_args()
 
     if not args.skip_extractor and not args.video_folder:

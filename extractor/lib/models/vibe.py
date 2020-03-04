@@ -18,6 +18,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from checkpoints_loader import CheckpointsLoader
 
 from .spin import Regressor, hmr
 
@@ -58,10 +59,10 @@ class PoseGenerator(nn.Module):
     def __init__(
             self,
             seqlen,
+            pretrained_spin,
             batch_size=64,
             n_layers=1,
-            hidden_size=2048,
-            pretrained='data/vibe_data/spin_model_checkpoint.pth.tar'
+            hidden_size=2048
     ):
 
         super(PoseGenerator, self).__init__()
@@ -76,17 +77,22 @@ class PoseGenerator(nn.Module):
             hidden_size=hidden_size
         )
 
-        self.hmr = hmr()
-        checkpoint = torch.load(pretrained, map_location=self.device)
-        self.hmr.load_state_dict(checkpoint['model'], strict=False)
+        # self.hmr = 
+
+        # checkpoint = torch.load(pretrained, map_location=self.device)
+        # self.hmr.load_state_dict(checkpoint['model'], strict=False)
+
+
+        self.hmr = CheckpointsLoader('checkpoints').load(hmr(), pretrained_spin, strict=False, checkpoints_key='model')
 
         # regressor can predict cam, pose and shape params in an iterative way
-        self.regressor = Regressor()
+        # self.regressor = Regressor()
 
-        if pretrained and os.path.isfile(pretrained):
-            pretrained_dict = torch.load(pretrained, map_location=self.device)['model']
+        # if pretrained and os.path.isfile(pretrained):
+        #     pretrained_dict = torch.load(pretrained, map_location=self.device)['model']
 
-            self.regressor.load_state_dict(pretrained_dict, strict=False)
+        #     self.regressor.load_state_dict(pretrained_dict, strict=False)
+        self.regressor = CheckpointsLoader('checkpoints').load(Regressor(), pretrained_spin, strict=False, checkpoints_key='model')
 
 
     def forward(self, input, J_regressor=None):
