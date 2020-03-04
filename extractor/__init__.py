@@ -112,11 +112,11 @@ class Extractor():
             # Step 1
 
             # Find tracklets using OpenPose or YOLOv3
-            tracklets = self._find_tracklets(video_file, image_folder)
+            tracklets = self._find_tracklets(video_file, image_folder, output_path)
 
             self.run_vibe(video_file, image_folder, img_shape, tracklets, num_frames, output_path)
 
-    def _find_tracklets(self, video_file, image_folder):
+    def _find_tracklets(self, video_file, image_folder, output_path):
         if self.tracking_method == 'pose':
             # Use OpenPose Spatio-Temporal Affinity Fields to find 2D poses in video
             if not os.path.isabs(video_file):
@@ -132,7 +132,11 @@ class Extractor():
                 output_format='dict',
                 yolo_img_size=self.yolo_img_size,
             )
-            tracking_results = mpt(image_folder)
+            if self.render:
+                output_file = os.path.join(output_path, 'bboxes.mp4')
+            else:
+                output_file = None
+            tracking_results = mpt(image_folder, output_file=output_file)
 
         # Remove tracklets that are too short
         for person_id in list(tracking_results.keys()):
@@ -161,14 +165,7 @@ class Extractor():
         model = CheckpointsLoader('checkpoints').load(model, url, strict=False, checkpoints_key='gen_state_dict')
         model.eval()
 
-        # # ========= Load pretrained weights ========= #
-        # pretrained_file = download_ckpt(use_3dpw=True)
-        # ckpt = torch.load(pretrained_file, map_location=self.device)
-        # ckpt = ckpt['gen_state_dict']
-        # model.load_state_dict(ckpt, strict=False)
-        # model.eval()
 
-        # ========= Run VIBE on each person ========= #
         vibe_results = {}
 
         for person_id in list(tracking_results.keys()):
@@ -186,7 +183,7 @@ class Extractor():
                 frames=frames,
                 bboxes=bboxes,
                 joints2d=joints2d,
-                scale=BBOX_SCALE,
+                scale=BBOX_SCALE
             )
 
             bboxes = dataset.bboxes
@@ -293,12 +290,10 @@ class Extractor():
 
         for person in vibe_results.keys():
             dump_path = os.path.join(output_path, "%s.pkl" % person)
-            os.makedirs(os.path.dirname(dump_path), exist_ok=True)
             pickle.dump(vibe_results[person], open(dump_path, 'wb'))
 
 
         if self.render:
-            # ========= Render results as a single video ========= #
             renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True)
 
             output_img_folder = f'{image_folder}_output'
@@ -348,7 +343,7 @@ class Extractor():
 
             # ========= Save rendered video ========= #
             vid_name = os.path.basename(video_file)
-            save_name = f'{vid_name.replace(".mp4", "")}_vibe_result.mp4'
+            save_name = 'vibe.mp4'
             save_name = os.path.join(output_path, save_name)
             # print(f'Saving result video to {save_name}')
             images_to_video(img_folder=output_img_folder, output_vid_file=save_name)

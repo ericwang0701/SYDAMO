@@ -22,7 +22,7 @@ from torch.utils.data import Dataset
 from torchvision.transforms.functional import to_tensor
 
 from ..utils.smooth_bbox import get_all_bbox_params
-from ..data_utils.img_utils import get_single_image_crop_demo
+from ..data_utils.img_utils import get_single_image_crop
 
 
 class Inference(Dataset):
@@ -62,7 +62,7 @@ class Inference(Dataset):
 
         j2d = self.joints2d[idx] if self.has_keypoints else None
 
-        norm_img, raw_img, kp_2d = get_single_image_crop_demo(
+        norm_img, raw_img, kp_2d = get_single_image_crop(
             img,
             bbox,
             kp_2d=j2d,

@@ -1,0 +1,1 @@
+The code in this folder is based on the [VIBE implementation](https://github.com/mkocabas/VIBE/) by Muhammed Kocabas.

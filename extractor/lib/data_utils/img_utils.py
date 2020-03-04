@@ -177,36 +177,7 @@ def get_image_crops(image_file, bboxes):
     batch_image = torch.cat([x.unsqueeze(0) for x in crop_images])
     return batch_image
 
-def get_single_image_crop(image, bbox, scale=1.3):
-    if isinstance(image, str):
-        if os.path.isfile(image):
-            image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)
-        else:
-            print(image)
-            raise BaseException(image, 'is not a valid file!')
-    elif isinstance(image, torch.Tensor):
-        image = image.numpy()
-    elif not isinstance(image, np.ndarray):
-        raise('Unknown type for object', type(image))
-
-    crop_image, _ = generate_patch_image_cv(
-        cvimg=image.copy(),
-        c_x=bbox[0],
-        c_y=bbox[1],
-        bb_width=bbox[2],
-        bb_height=bbox[3],
-        patch_width=224,
-        patch_height=224,
-        do_flip=False,
-        scale=scale,
-        rot=0,
-    )
-
-    crop_image = convert_cvimg_to_tensor(crop_image)
-
-    return crop_image
-
-def get_single_image_crop_demo(image, bbox, kp_2d, scale=1.2, crop_size=224):
+def get_single_image_crop(image, bbox, kp_2d, scale=1.2, crop_size=224):
     if isinstance(image, str):
         if os.path.isfile(image):
             image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_BGR2RGB)
@@ -240,11 +211,6 @@ def get_single_image_crop_demo(image, bbox, kp_2d, scale=1.2, crop_size=224):
     crop_image = convert_cvimg_to_tensor(crop_image)
 
     return crop_image, raw_image, kp_2d
-
-def read_image(filename):
-    image = cv2.cvtColor(cv2.imread(filename), cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (224,224))
-    return convert_cvimg_to_tensor(image)
 
 def convert_cvimg_to_tensor(image):
     transform = get_default_transform()

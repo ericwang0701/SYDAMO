@@ -26,7 +26,7 @@ from pytube import YouTube
 from collections import OrderedDict
 
 from .smooth_bbox import get_smooth_bbox_params, get_all_bbox_params
-from ..data_utils.img_utils import get_single_image_crop_demo
+from ..data_utils.img_utils import get_single_image_crop
 from .geometry import rotation_matrix_to_angle_axis
 from ..smplify.temporal_smplify import TemporalSMPLify
 
@@ -66,7 +66,7 @@ def preprocess_video(video, joints2d, bboxes, frames, scale=1.0, crop_size=224):
 
         j2d = joints2d[idx] if joints2d is not None else None
 
-        norm_img, raw_img, kp_2d = get_single_image_crop_demo(
+        norm_img, raw_img, kp_2d = get_single_image_crop(
             img,
             bbox,
             kp_2d=j2d,
