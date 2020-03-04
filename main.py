@@ -9,6 +9,8 @@ from utils import make_tarfile
 def main(args):
     if not args.skip_extractor:
         extractor = Extractor(video_folder=args.video_folder,
+                              pretrained_vibe=args.pretrained_vibe,
+                              pretrained_spin=args.pretrained_spin,
                               output_folder=args.extractor_results_folder,
                               render=args.render_extractor_results,
                               tracking_method=args.tracking_method,
