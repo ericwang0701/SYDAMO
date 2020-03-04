@@ -34,6 +34,7 @@ import argparse
 import glob
 import numpy as np
 from multi_person_tracker import MPT
+from checkpoints_loader import CheckpointsLoader
 from torch.utils.data import DataLoader
 import logging
 
@@ -156,12 +157,16 @@ class Extractor():
             hidden_size=1024
         ).to(self.device)
 
-        # ========= Load pretrained weights ========= #
-        pretrained_file = download_ckpt(use_3dpw=True)
-        ckpt = torch.load(pretrained_file, map_location=self.device)
-        ckpt = ckpt['gen_state_dict']
-        model.load_state_dict(ckpt, strict=False)
+        url = 'https://oddityweights1.blob.core.windows.net/weights/vibe_model_w_3dpw.pth.tar'
+        model = CheckpointsLoader('/').load(model, url, strict=False, checkpoints_key='gen_state_dict')
         model.eval()
+
+        # # ========= Load pretrained weights ========= #
+        # pretrained_file = download_ckpt(use_3dpw=True)
+        # ckpt = torch.load(pretrained_file, map_location=self.device)
+        # ckpt = ckpt['gen_state_dict']
+        # model.load_state_dict(ckpt, strict=False)
+        # model.eval()
 
         # ========= Run VIBE on each person ========= #
         vibe_results = {}
