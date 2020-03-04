@@ -2,17 +2,17 @@
 
 ![Model architecture](model.png)
 
+A pipeline that generates synthetic datasets from video to train human motion recognition models on.
+
 ## Installation
 
 Requirements:
- - unzip
  - ffmpeg
- - gdown (for prepare_data.sh)
+ - unzip (for now)
+ - gdown (for now)
 
-1. Make a virtualenv
-2. Install gdown from pip
-3. Install unzip and ffmpeg
-4. `pip install -r requirements.txt`
+1. Create a new virtualenv with Python >= 3.7.
+2. `pip install -r requirements.txt`
 
 ## Usage
 
