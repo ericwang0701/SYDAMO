@@ -363,7 +363,7 @@ class Extractor():
                 continue
 
             # Extract from single video
-            sve = SingleVideoExtractor(video_file, pretrained_spin=pretrained_spin)
+            sve = SingleVideoExtractor(video_file, pretrained_spin=self.pretrained_spin)
             sve.run(render=self.render, output_folder=self.output_folder)
 
 
