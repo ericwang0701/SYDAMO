@@ -59,7 +59,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 class SingleVideoExtractor():
     results = {}
 
-    def __init__(self, video_file, tracking_method='yolo'):
+    def __init__(self, video_file, pretrained_spin, tracking_method='yolo'):
         # Path to video file
         self.video_file = video_file
         if not os.path.isabs(self.video_file):
@@ -67,6 +67,7 @@ class SingleVideoExtractor():
 
         # Tracking method (can be YOLOv3, Openpose or MaskRCNN)
         self.tracking_method = tracking_method
+        self.pretrained_spin = pretrained_spin
 
         # Name extracted from video filename
         # TODO: maybe replace by GUID?
@@ -362,7 +363,7 @@ class Extractor():
                 continue
 
             # Extract from single video
-            sve = SingleVideoExtractor(video_file)
+            sve = SingleVideoExtractor(video_file, pretrained_spin=pretrained_spin)
             sve.run(render=self.render, output_folder=self.output_folder)
 
 
