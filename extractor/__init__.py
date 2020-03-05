@@ -26,7 +26,6 @@ if platform.system() == 'Linux':
 import cv2
 import time
 import torch
-# import joblib
 import pickle
 import shutil
 import colorsys
@@ -37,6 +36,7 @@ from multi_person_tracker import MPT
 from checkpoints_loader import CheckpointsLoader
 from torch.utils.data import DataLoader
 import logging
+import subprocess
 
 from .lib.models.vibe import PoseGenerator
 from .lib.utils.renderer import Renderer
@@ -48,152 +48,180 @@ from .lib.utils.demo_utils import (
     smplify_runner,
     convert_crop_cam_to_orig_img,
     prepare_rendering_results,
-    video_to_images,
     images_to_video
 )
 
 MIN_NUM_FRAMES = 25
 BBOX_SCALE = 1.1
 
-class Extractor():
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    def __init__(
-        self,
-        video_folder,
-        pretrained_vibe,
-        pretrained_spin,
-        output_folder='output/',
-        tracker_batch_size=12,
-        tracking_method='bbox',
-        detector='yolo',
-        yolo_img_size=416,
-        run_smplify=False,
-        staf_dir='',
-        vibe_batch_size=450,
-        render=False
-    ):
-        logging.info('==================== EXTRACTOR ====================')
+class SingleVideoExtractor():
+    results = {}
 
-        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    def __init__(self, video_file, tracking_method='yolo'):
+        # Path to video file
+        self.video_file = video_file
+        if not os.path.isabs(self.video_file):
+            self.video_file = os.path.join(os.getcwd(), self.video_file)
 
-        self.video_folder = video_folder
-        self.pretrained_vibe = pretrained_vibe
-        self.pretrained_spin = pretrained_spin
-
-        self.output_folder = output_folder
-        self.tracker_batch_size = tracker_batch_size
+        # Tracking method (can be YOLOv3, Openpose or MaskRCNN)
         self.tracking_method = tracking_method
-        self.detector = detector
-        self.yolo_img_size = yolo_img_size
-        self.run_smplify = run_smplify
-        self.staf_dir = staf_dir
-        self.vibe_batch_size = vibe_batch_size
-        self.render = render
 
-        self.display = False # TODO: experiment with this
+        # Name extracted from video filename
+        # TODO: maybe replace by GUID?
+        self.name = os.path.basename(self.video_file).replace('.mp4', '').replace('.', '_')
 
-    def run(self):
-        """Main function to execute the extractor"""
+        # Create a folder in /tmp for frame images
+        self.image_folder = os.path.join('/tmp', self.name)
+        os.makedirs(self.image_folder, exist_ok=True)
 
-        # List of all files in the video folder
-        video_files = glob.glob(os.path.join(self.video_folder, '*'))
-        logging.info(f'Found {str(len(video_files))} video files')
 
-        for video_file in video_files:
-            if not os.path.isfile(video_file):
-                logging.error(f'Skipping video \"{video_file}\": does not exist!')
-                continue
+    def run(self, output_folder, render=False):
+        logging.info(f'Running extraction for video \'{self.name}\'')
 
-            # Step 0
+        # Split video into images
+        self._video_to_images()
+        # Find person bounding boxes or 2D joints to make crops from
+        self._find_tracklets()
+        # Run VIBE on these tracklets
+        self._run_vibe()
+        # Save results to the output folder
+        self._save(output_folder)
+        # Render the results (videos with bboxes and 3D poses) to output folder
+        if render:
+            self._render(output_folder)
+        # Remove temporary data
+        self._clean()
 
-            # Create a folder for the output pickles
-            name = os.path.basename(video_file).replace('.mp4', '')
-            output_path = os.path.join(self.output_folder, name)
-            os.makedirs(output_path, exist_ok=True)
-            # Split video into images
-            image_folder, num_frames, img_shape = video_to_images(video_file, return_info=True)
+    def _video_to_images(self):
+        """Split the video into frame images using ffmpeg"""
 
-            # Step 1
+        # Use ffmpeg to split video into frames
+        command = ['ffmpeg',
+                '-i', self.video_file,
+                '-f', 'image2',
+                '-v', 'error',
+                f'{self.image_folder}/%06d.png']
 
-            # Find tracklets using OpenPose or YOLOv3
-            tracklets = self._find_tracklets(video_file, image_folder, output_path)
+        subprocess.call(command, stdout=subprocess.DEVNULL)
 
-            self.run_vibe(video_file, image_folder, img_shape, tracklets, num_frames, output_path)
+        image_shape = cv2.imread(os.path.join(self.image_folder, '000001.png')).shape
+        self.orig_height, self.orig_width = image_shape[:2]
 
-    def _find_tracklets(self, video_file, image_folder, output_path):
-        if self.tracking_method == 'pose':
+
+    def _save(self, output_folder, rendered_tracklets=False, rendered_motion=False):
+        # Create a folder for the output pickles
+        self.output_path = os.path.join(self.output_folder, name)
+        os.makedirs(self.output_path, exist_ok=True)
+
+        for person in self.results.keys():
+            dump_path = os.path.join(output_path, "%s.pkl" % person)
+            pickle.dump(self.results[person], open(dump_path, 'wb'))
+
+    def _render_bbox(self, output_folder):
+        pass
+
+    def _render_vibe(self, output_folder):
+        renderer = Renderer(resolution=(self.orig_width, self.orig_height), orig_img=True)
+
+        output_img_folder = f'{self.image_folder}_output'
+        os.makedirs(output_img_folder, exist_ok=True)
+
+        # prepare results for rendering
+        num_frames = len(os.listdir(self.image_folder))
+        frame_results = prepare_rendering_results(self.results, num_frames)
+        mesh_color = {k: colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0) for k in self.results.keys()}
+
+        image_file_names = sorted([
+            os.path.join(self.image_folder, x)
+            for x in os.listdir(self.image_folder)
+            if x.endswith('.png') or x.endswith('.jpg')
+        ])
+
+        for frame_idx in range(len(image_file_names)):
+            img_fname = image_file_names[frame_idx]
+            img = cv2.imread(img_fname)
+
+            for person_id, person_data in frame_results[frame_idx].items():
+                frame_verts = person_data['verts']
+                frame_cam = person_data['cam']
+
+                mc = mesh_color[person_id]
+
+                mesh_filename = None
+
+                img = renderer.render(
+                    img,
+                    frame_verts,
+                    cam=frame_cam,
+                    color=mc,
+                    mesh_filename=mesh_filename,
+                )
+
+            cv2.imwrite(os.path.join(output_img_folder, f'{frame_idx:06d}.png'), img)
+
+        # ========= Save rendered video ========= #
+        vid_name = os.path.basename(self.video_file)
+        save_name = 'vibe.mp4'
+        save_name = os.path.join(output_path, save_name)
+        # print(f'Saving result video to {save_name}')
+        images_to_video(img_folder=output_img_folder, output_vid_file=save_name)
+        shutil.rmtree(output_img_folder)
+
+    def _find_tracklets(self):
+        if self.tracking_method == 'openpose':
             # Use OpenPose Spatio-Temporal Affinity Fields to find 2D poses in video
-            if not os.path.isabs(video_file):
-                video_file = os.path.join(os.getcwd(), video_file)
-            tracking_results = run_posetracker(video_file, staf_folder=self.staf_dir, display=self.display)
-        else:
+            tracking_results = run_posetracker(self.video_file, staf_folder=self.staf_dir)
+
+        elif self.tracking_method == 'yolo' or self.tracking_method == 'maskrcnn':
             # Use Multi-Person Tracker with YOLOv3 and SORT to find bounding boxes in video
             mpt = MPT(
-                device=self.device,
-                batch_size=self.tracker_batch_size,
-                display=self.display,
-                detector_type=self.detector,
+                device=device,
+                detector_type=self.tracking_method,
                 output_format='dict',
-                yolo_img_size=self.yolo_img_size,
+                yolo_img_size=416,
             )
-            if self.render:
-                output_file = os.path.join(output_path, 'bboxes.mp4')
-            else:
-                output_file = None
-            tracking_results = mpt(image_folder, output_file=output_file)
+            # TODO: render
+            tracking_results = mpt(self.image_folder)
 
         # Remove tracklets that are too short
         for person_id in list(tracking_results.keys()):
             if tracking_results[person_id]['frames'].shape[0] < MIN_NUM_FRAMES:
                 del tracking_results[person_id]
 
-        mpt_num_frames = [str(person['frames'].shape[0]) for person in tracking_results.values()]
+        self.tracking_results = tracking_results
+        # logging.info(f'{self.tracking_method} detected {str(len(tracking_results.keys()))} person(s)')
 
-        method = 'YOLOv3' if self.tracking_method == 'bbox' else 'Openpose'
-        logging.info(f'Found {str(len(tracking_results.keys()))} person(s) using {method}, num. frames = {" ,".join(mpt_num_frames)}')
-
-        return tracking_results
-
-
-    def run_vibe(self, video_file, image_folder, img_shape, tracking_results, num_frames, output_path):
-
-        orig_height, orig_width = img_shape[:2]
-
-        # ========= Define VIBE model ========= #
+    def _get_pose_generator(self):
         model = PoseGenerator(
             seqlen=16,
             n_layers=2,
             hidden_size=1024,
             pretrained_spin=self.pretrained_spin
-        ).to(self.device)
+        ).to(device)
 
         model = CheckpointsLoader('checkpoints').load(model, self.pretrained_vibe, strict=False, checkpoints_key='gen_state_dict')
         model.eval()
+        return model
 
-
-        vibe_results = {}
+    def _run_vibe(self):
+        model = self._get_pose_generator()
 
         for person_id in list(tracking_results.keys()):
-            bboxes = joints2d = None
-
-            if self.tracking_method == 'bbox':
-                bboxes = tracking_results[person_id]['bbox']
-            elif self.tracking_method == 'pose':
-                joints2d = tracking_results[person_id]['joints2d']
-
-            frames = tracking_results[person_id]['frames']
 
             dataset = Inference(
-                image_folder=image_folder,
-                frames=frames,
-                bboxes=bboxes,
-                joints2d=joints2d,
+                image_folder=self.image_folder,
+                frames=tracking_results[person_id].get('frames'),
+                bboxes=tracking_results[person_id].get('bbox'),
+                joints2d=tracking_results[person_id].get('joints2d'),
                 scale=BBOX_SCALE
             )
 
             bboxes = dataset.bboxes
             frames = dataset.frames
-            has_keypoints = True if joints2d is not None else False
+            joints2d = dataset.joints2d
+            has_keypoints = tracking_results[person_id].get('joints2d') is not None
 
             dataloader = DataLoader(dataset, batch_size=self.vibe_batch_size, num_workers=16)
 
@@ -207,7 +235,7 @@ class Extractor():
                         norm_joints2d.append(nj2d.numpy().reshape(-1, 21, 3))
 
                     batch = batch.unsqueeze(0)
-                    batch = batch.to(self.device)
+                    batch = batch.to(device)
 
                     batch_size, seqlen = batch.shape[:2]
                     output = model(batch)[-1]
@@ -218,7 +246,6 @@ class Extractor():
                     pred_betas.append(output['theta'][:, :,75:].reshape(batch_size * seqlen, -1))
                     pred_joints3d.append(output['kp_3d'].reshape(batch_size * seqlen, -1, 3))
 
-
                 pred_cam = torch.cat(pred_cam, dim=0)
                 pred_verts = torch.cat(pred_verts, dim=0)
                 pred_pose = torch.cat(pred_pose, dim=0)
@@ -228,10 +255,10 @@ class Extractor():
                 del batch
 
             # ========= [Optional] run Temporal SMPLify to refine the results ========= #
-            if self.run_smplify and self.tracking_method == 'pose':
+            if self.run_smplify and self.tracking_method == 'openpose':
                 norm_joints2d = np.concatenate(norm_joints2d, axis=0)
                 norm_joints2d = convert_kps(norm_joints2d, src='staf', dst='spin')
-                norm_joints2d = torch.from_numpy(norm_joints2d).float().to(self.device)
+                norm_joints2d = torch.from_numpy(norm_joints2d).float().to(device)
 
                 # Run Temporal SMPLify
                 update, new_opt_vertices, new_opt_cam, new_opt_pose, new_opt_betas, \
@@ -240,13 +267,13 @@ class Extractor():
                     pred_betas=pred_betas,
                     pred_cam=pred_cam,
                     j2d=norm_joints2d,
-                    device=self.device,
+                    device=device,
                     batch_size=norm_joints2d.shape[0],
                     pose2aa=False,
                 )
 
                 # update the parameters after refinement
-                print(f'Update ratio after Temporal SMPLify: {update.sum()} / {norm_joints2d.shape[0]}')
+                # logging.info(f'Update ratio after Temporal SMPLify: {update.sum()} / {norm_joints2d.shape[0]}')
                 pred_verts = pred_verts.cpu()
                 pred_cam = pred_cam.cpu()
                 pred_pose = pred_pose.cpu()
@@ -258,9 +285,9 @@ class Extractor():
                 pred_betas[update] = new_opt_betas[update]
                 pred_joints3d[update] = new_opt_joints3d[update]
 
-            elif self.run_smplify and self.tracking_method == 'bbox':
-                print('[WARNING] You need to enable pose tracking to run Temporal SMPLify algorithm!')
-                print('[WARNING] Continuing without running Temporal SMPLify!..')
+            elif self.run_smplify and self.tracking_method != 'openpose':
+                logging.warning('You need to enable pose tracking to run Temporal SMPLify algorithm!')
+                logging.warning('Continuing without running Temporal SMPLify...')
 
             # ========= Save results to a pickle file ========= #
             pred_cam = pred_cam.cpu().numpy()
@@ -272,11 +299,11 @@ class Extractor():
             orig_cam = convert_crop_cam_to_orig_img(
                 cam=pred_cam,
                 bbox=bboxes,
-                img_width=orig_width,
-                img_height=orig_height
+                img_width=self.orig_width,
+                img_height=self.orig_height
             )
 
-            output_dict = {
+            self.results[person_id] = {
                 'pred_cam': pred_cam,
                 'orig_cam': orig_cam,
                 'verts': pred_verts,
@@ -288,69 +315,57 @@ class Extractor():
                 'frame_ids': frames,
             }
 
-            vibe_results[person_id] = output_dict
-
         del model
 
+        logging.info(f'Estimated {str(len(self.results.keys()))} 3D poses using VIBE')
 
-        for person in vibe_results.keys():
-            dump_path = os.path.join(output_path, "%s.pkl" % person)
-            pickle.dump(vibe_results[person], open(dump_path, 'wb'))
+    def _clean(self):
+        shutil.rmtree(self.image_folder)
 
-        logging.info(f'Estimated {str(len(vibe_results.keys()))} 3D poses using VIBE')
 
-        if self.render:
-            renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True)
+class Extractor():
 
-            output_img_folder = f'{image_folder}_output'
-            os.makedirs(output_img_folder, exist_ok=True)
+    def __init__(
+        self,
+        video_folder,
+        pretrained_vibe,
+        pretrained_spin,
+        output_folder='output/',
+        tracking_method='yolo',
+        run_smplify=False,
+        staf_dir='',
+        vibe_batch_size=450,
+        render=False
+    ):
+        logging.info('==================== EXTRACTOR ====================')
 
-            # prepare results for rendering
-            frame_results = prepare_rendering_results(vibe_results, num_frames)
-            mesh_color = {k: colorsys.hsv_to_rgb(np.random.rand(), 0.5, 1.0) for k in vibe_results.keys()}
 
-            image_file_names = sorted([
-                os.path.join(image_folder, x)
-                for x in os.listdir(image_folder)
-                if x.endswith('.png') or x.endswith('.jpg')
-            ])
+        self.video_folder = video_folder
+        self.pretrained_vibe = pretrained_vibe
+        self.pretrained_spin = pretrained_spin
 
-            for frame_idx in range(len(image_file_names)):
-                img_fname = image_file_names[frame_idx]
-                img = cv2.imread(img_fname)
+        self.output_folder = output_folder
+        self.tracking_method = tracking_method
+        self.run_smplify = run_smplify
+        self.staf_dir = staf_dir
+        self.vibe_batch_size = vibe_batch_size
+        self.render = render
 
-                for person_id, person_data in frame_results[frame_idx].items():
-                    frame_verts = person_data['verts']
-                    frame_cam = person_data['cam']
+    def run(self):
+        """Main function to execute the extractor"""
 
-                    mc = mesh_color[person_id]
+        for video_file in self._video_files():
+            
+            # Check if video file exists
+            if not os.path.isfile(video_file):
+                logging.error(f'Skipping video \"{video_file}\": does not exist!')
+                continue
 
-                    mesh_filename = None
+            # Extract from single video
+            sve = SingleVideoExtractor(video_file)
+            sve.run(render=self.render, output_folder=self.output_folder)
 
-                    img = renderer.render(
-                        img,
-                        frame_verts,
-                        cam=frame_cam,
-                        color=mc,
-                        mesh_filename=mesh_filename,
-                    )
 
-                cv2.imwrite(os.path.join(output_img_folder, f'{frame_idx:06d}.png'), img)
-
-                if self.display:
-                    cv2.imshow('Video', img)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-
-            if self.display:
-                cv2.destroyAllWindows()
-
-            # ========= Save rendered video ========= #
-            vid_name = os.path.basename(video_file)
-            save_name = 'vibe.mp4'
-            save_name = os.path.join(output_path, save_name)
-            # print(f'Saving result video to {save_name}')
-            images_to_video(img_folder=output_img_folder, output_vid_file=save_name)
-            shutil.rmtree(output_img_folder)
-
-        shutil.rmtree(image_folder)
+    def _video_files(self):
+        video_files = glob.glob(os.path.join(self.video_folder, '*'))
+        return video_files

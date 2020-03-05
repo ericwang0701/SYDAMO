@@ -4,7 +4,7 @@ import os
 
 from extractor import Extractor
 from synthesiser import Synthesiser
-from utils import make_tarfile
+from utils import make_tarfile, check_blender_install
 
 def main(args):
     if not args.skip_extractor:
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--skip_extractor',
                         action='store_true',
-                        help='SKip the motion extraction phase')
+                        help='Skip the motion extraction phase')
 
     parser.add_argument('--blender',
                         type=str,
@@ -80,12 +80,12 @@ if __name__ == '__main__':
     parser.add_argument('--staf_dir',
                         type=str,
                         default='',
-                        help='Path to the STAF build of Openpose to use when tracking_method is pose.')
+                        help='Path to the STAF build of Openpose to use when tracking_method is openpose.')
 
     parser.add_argument('--tracking_method',
                         type=str,
-                        default='bbox',
-                        help='bbox or pose')
+                        default='yolo',
+                        help='yolo or maskrcnn or openpose')
 
     parser.add_argument('--run_smplify',
                         action='store_true',
@@ -104,7 +104,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Check if video folder is passed
     if not args.skip_extractor and not args.video_folder:
         raise Exception('--video_folder is required for the extractor.')
+
+    check_blender_install(args.blender)
 
     main(args)

@@ -6,14 +6,10 @@ A pipeline that generates synthetic datasets from video to train human motion re
 
 ## Installation
 
-Requirements:
- - ffmpeg
- - unzip (for now)
- - gdown (for now)
-
-1. Create a new virtualenv with Python >= 3.7. (e.g. `python -m venv venv`)
-2. Activate environment (e.g. `source venv/bin/activate`)
-3. `pip install -r requirements.txt`
+1. Install `ffmpeg` and Blender.
+2. Create a new virtualenv with Python >= 3.7. (e.g. `python -m venv venv`).
+3. Activate environment (e.g. `source venv/bin/activate`).
+4. Install dependencies `pip install -r requirements.txt`.
 
 ## Usage
 
